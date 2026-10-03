@@ -208,7 +208,7 @@ function pumpImg(){
   }
 }
 const imgObs = "IntersectionObserver" in window ? new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ imgObs.unobserve(en.target); imgQueue.push([en.target.dataset.ean,en.target]); pumpImg() } }),{rootMargin:"200px"}) : null;
-function showImg(box,u){ const im=new Image(); im.alt=""; im.loading="lazy"; im.onload=()=>{ box.textContent=""; box.appendChild(im) }; im.src=u }
+function showImg(box,u){ const im=new Image(); im.alt=""; im.onload=()=>{ box.textContent=""; box.appendChild(im) }; im.src=u }
 function thumb(p){
   const box=document.createElement("div"); box.className="thumb"; box.textContent=(p[1].match(/[A-ZÁÉÍÓÚÑ0-9]/)||["·"])[0]; box.dataset.ean=p[0];
   const ean=p[0];

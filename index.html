@@ -211,7 +211,7 @@ fieldset input{width:auto}
 <script>
 const WHATSAPP = "5491128656389"; // WhatsApp del súper: 11 2865-6389
 const MIN = 25000, ENVIO = 2000, GRATIS = 50000, PAGE = 60;
-let R = [], P = [], IDX = [], byEan = new Map(), LOCAL_IMG = new Set();
+let R = [], P = [], IDX = [], TOK = [], byEan = new Map(), LOCAL_IMG = new Set();
 // Productos por peso: p[4] = gramos por cada toque del +. El precio de lista es por kg.
 const stepOf = p => p[4]||0;
 const fmtW = g => g>=1000 ? (g/1000).toLocaleString("es-AR")+" kg" : g+" g";
@@ -234,12 +234,22 @@ function chips(){
 }
 function filter(){
   const words = norm(query).split(/\s+/).filter(Boolean);
-  results = [];
+  // Cada palabra coincide si está en el nombre, o si el nombre tiene una abreviatura de ella
+  // (SAG abrevia: "LA SERE." encuentra "serenisima", "HELL." encuentra "hellmanns"). Primero van las coincidencias exactas.
+  const exact = [], abbr = [];
+  const variants = words.map(w => w.length>4 && w.endsWith("s") ? [w, w.slice(0,-1)] : [w]);
   for(let i=0;i<P.length;i++){
     if(rubro>=0 && P[i][2]!==rubro) continue;
-    if(words.length && !words.every(w=>IDX[i].includes(w))) continue;
-    results.push(P[i]);
+    let all=true, approx=false;
+    for(const vs of variants){
+      if(vs.some(v=>IDX[i].includes(v))) continue;
+      if(vs[0].length>=4 && TOK[i].some(t=>t.length>=3 && vs[0].startsWith(t))){ approx=true; continue }
+      all=false; break;
+    }
+    if(!all) continue;
+    (approx?abbr:exact).push(P[i]);
   }
+  results = exact.concat(abbr);
 }
 function qtyCtl(e){
   const q = cart.get(e)||0, wrap=document.createElement("div");
@@ -424,7 +434,7 @@ $("copy").onclick=()=>{
 $("back").onclick=()=>{ $("step1").hidden=false; $("step2").hidden=true };
 $("count").textContent = "Cargando productos…";
 fetch("productos.json").then(r=>r.json()).then(DATA=>{
-  R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + p[0])); byEan = new Map(P.map(p=>[p[0],p]));
+  R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + p[0])); TOK = IDX.map(s => s.split(/[^a-z0-9]+/).filter(Boolean)); byEan = new Map(P.map(p=>[p[0],p]));
   try{ const s = JSON.parse(localStorage.getItem("eltio-cart")||"[]"); s.forEach(([e,q])=>{ if(byEan.has(e)) cart.set(e,q) }) }catch(e){}
   chips(); render();
   // Fotos propias subidas a fotos/<EAN>.jpg: se detectan solas desde el repositorio.

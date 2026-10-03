@@ -142,6 +142,14 @@ fieldset input{width:auto}
 .note{font-size:.8rem;padding:6px 8px;margin-top:6px}
 .forgot{display:grid;gap:8px;margin-top:14px}
 .forgot h3{margin:0;font-size:1rem;font-family:var(--font-display);font-weight:800}
+/* Diseño B: Amarillo vidriera */
+:root{--bg:#fbf9f1;--line:#e6e0c8;--ink:#14203a;--muted:#5d6475;--brand:#00337f;--brand-ink:#fff;--tag:#00337f;--tag-ink:#fff;--band:#f2c200;--band-ink:#00337f;--phbg:#f5f2e6}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#11131a;--surface:#1a1d27;--line:#2d3140;--ink:#eef0f5;--muted:#a0a6b5;--brand:#f2c200;--brand-ink:#0b2150;--tag:#2a5bc2;--tag-ink:#fff;--band:#e0b400;--band-ink:#0b2150;--phbg:#22263a}}
+:root[data-theme="dark"]{--bg:#11131a;--surface:#1a1d27;--line:#2d3140;--ink:#eef0f5;--muted:#a0a6b5;--brand:#f2c200;--brand-ink:#0b2150;--tag:#2a5bc2;--tag-ink:#fff;--band:#e0b400;--band-ink:#0b2150;--phbg:#22263a}
+h1 span{color:inherit}
+h1{text-transform:uppercase;letter-spacing:.01em}
+.band .search{border:2px solid #00337f}
+.logo{background:#fff}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 <style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>

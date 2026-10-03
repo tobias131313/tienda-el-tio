@@ -142,6 +142,12 @@ fieldset input{width:auto}
 .note{font-size:.8rem;padding:6px 8px;margin-top:6px}
 .forgot{display:grid;gap:8px;margin-top:14px}
 .forgot h3{margin:0;font-size:1rem;font-family:var(--font-display);font-weight:800}
+/* Diseño A: Azul con amarillo */
+:root{--bg:#f2f4f8;--line:#d9dfea;--ink:#141c2e;--muted:#5a647a;--brand:#00337f;--brand-ink:#fff;--tag:#f2c200;--tag-ink:#0b2150;--band:#00337f;--band-ink:#fff;--phbg:#eef1f7}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0d1220;--surface:#161d2e;--line:#27304a;--ink:#e9edf6;--muted:#9aa4bb;--brand:#f2c200;--brand-ink:#0b2150;--tag:#f2c200;--tag-ink:#0b2150;--band:#0a2a66;--band-ink:#fff;--phbg:#1d2538}}
+:root[data-theme="dark"]{--bg:#0d1220;--surface:#161d2e;--line:#27304a;--ink:#e9edf6;--muted:#9aa4bb;--brand:#f2c200;--brand-ink:#0b2150;--tag:#f2c200;--tag-ink:#0b2150;--band:#0a2a66;--band-ink:#fff;--phbg:#1d2538}
+.band{border-bottom:4px solid var(--tag)}
+.logo{background:#fff;box-shadow:0 0 0 2px var(--tag)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 <style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>

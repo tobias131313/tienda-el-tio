@@ -35,6 +35,7 @@ h1 span{color:var(--brand)}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;font:inherit;font-size:.85rem;font-weight:600;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.chip.sub{font-size:.8rem;padding:5px 10px;font-weight:500}
 .chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
 .info{display:flex;gap:8px;flex-wrap:wrap;margin-block:14px}
 .pill{font-size:.8rem;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
@@ -135,6 +136,7 @@ fieldset input{width:auto}
     </div>
     <input id="q" class="search" type="search" placeholder="Buscá un producto o marca" autocomplete="off" aria-label="Buscar producto">
     <div class="chips" id="chips" role="toolbar" aria-label="Rubros"></div>
+    <div class="chips" id="subchips" role="toolbar" aria-label="Subcategorías" hidden></div>
   </header>
 
   <div class="info">
@@ -211,7 +213,7 @@ fieldset input{width:auto}
 <script>
 const WHATSAPP = "5491128656389"; // WhatsApp del súper: 11 2865-6389
 const MIN = 25000, ENVIO = 2000, GRATIS = 50000, PAGE = 60;
-let R = [], P = [], IDX = [], TOK = [], byEan = new Map(), LOCAL_IMG = new Set();
+let R = [], P = [], S = [], IDX = [], TOK = [], byEan = new Map(), LOCAL_IMG = new Set();
 // Productos por peso: p[4] = gramos por cada toque del +. El precio de lista es por kg.
 const stepOf = p => p[4]||0;
 const fmtW = g => g>=1000 ? (g/1000).toLocaleString("es-AR")+" kg" : g+" g";
@@ -220,15 +222,27 @@ const lineTotal = (p,q) => stepOf(p) ? Math.round(q*stepOf(p)/1000*p[3]) : q*p[3
 const priceLabel = p => fmt(p[3]) + (stepOf(p) ? " /kg" : "");
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const show = p => p[6] ? p[1] : nice(p[1]);
 const nice = s => s.toLowerCase().replace(/(^|[\s(/.-])([a-záéíóúñü])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(\d+)\s?(Gr|Grs|Kg|Ml|Lt|Cc|Un|Cm)\b/gi,(m,a,b)=>a+" "+b.toLowerCase()).replace(/\bX\b/g,"x");
 const cart = new Map();
-let rubro = -1, query = "", shown = PAGE, results = [];
+let rubro = -1, sub = -1, query = "", shown = PAGE, results = [];
 const $ = id => document.getElementById(id);
 
+function subchips(){
+  const el=$("subchips"); el.innerHTML="";
+  if(rubro<0){ el.hidden=true; return }
+  const counts=new Map(); P.forEach(p=>{ if(p[2]===rubro && p[5]>=0) counts.set(p[5],(counts.get(p[5])||0)+1) });
+  if(counts.size<2){ el.hidden=true; return }
+  el.hidden=false;
+  const mk=(i,label)=>{ const b=document.createElement("button"); b.className="chip sub"; b.textContent=label; b.setAttribute("aria-pressed",String(sub===i)); b.onclick=()=>{sub=i;shown=PAGE;subchips();render()}; el.appendChild(b) };
+  mk(-1,"Todo "+R[rubro]);
+  [...counts.keys()].sort((a,b)=>S[a].localeCompare(S[b],"es")).forEach(i=>mk(i,S[i]));
+}
 function chips(){
+  subchips();
   const counts = R.map(()=>0); P.forEach(p=>counts[p[2]]++);
   const el = $("chips"); el.innerHTML = "";
-  const mk = (i,label)=>{ const b=document.createElement("button"); b.className="chip"; b.textContent=label; b.setAttribute("aria-pressed", String(rubro===i)); b.onclick=()=>{rubro=i;shown=PAGE;chips();render()}; el.appendChild(b) };
+  const mk = (i,label)=>{ const b=document.createElement("button"); b.className="chip"; b.textContent=label; b.setAttribute("aria-pressed", String(rubro===i)); b.onclick=()=>{rubro=i;sub=-1;shown=PAGE;chips();render()}; el.appendChild(b) };
   mk(-1,"Todo");
   R.map((r,i)=>[r,i]).sort((a,b)=>counts[b[1]]-counts[a[1]]).forEach(([r,i])=>mk(i,r));
 }
@@ -240,6 +254,7 @@ function filter(){
   const variants = words.map(w => w.length>4 && w.endsWith("s") ? [w, w.slice(0,-1)] : [w]);
   for(let i=0;i<P.length;i++){
     if(rubro>=0 && P[i][2]!==rubro) continue;
+    if(sub>=0 && P[i][5]!==sub) continue;
     let all=true, approx=false;
     for(const vs of variants){
       if(vs.some(v=>IDX[i].includes(v))) continue;
@@ -250,6 +265,8 @@ function filter(){
     (approx?abbr:exact).push(P[i]);
   }
   results = exact.concat(abbr);
+  // Navegando un rubro sin buscar: agrupado por subcategoría ("todos los fideos juntos").
+  if(rubro>=0 && !words.length) results.sort((a,b)=> ((S[a[5]]||"~").localeCompare(S[b[5]]||"~","es")) || show(a).localeCompare(show(b),"es"));
 }
 function qtyCtl(e){
   const q = cart.get(e)||0, wrap=document.createElement("div");
@@ -285,10 +302,10 @@ function thumb(p){
 const big=u=>u.replace(/\.(100|200)\.jpg$/,".400.jpg");
 let zcur=null;
 function openZoom(p){
-  zcur=p; $("zname").textContent=nice(p[1]); $("zrubro").textContent=R[p[2]]; $("zprice").textContent=priceLabel(p);
+  zcur=p; $("zname").textContent=show(p); $("zrubro").textContent=R[p[2]]+(S[p[5]]?" · "+S[p[5]]:""); $("zprice").textContent=priceLabel(p);
   const z=$("zimg"); z.textContent=(p[1].match(/[A-ZÁÉÍÓÚÑ0-9]/)||["·"])[0];
   const u=LOCAL_IMG.has(p[0])?"fotos/"+p[0]+".jpg":(IMG.get(p[0])?big(IMG.get(p[0])):"");
-  if(u){ const im=new Image(); im.alt=nice(p[1]); im.onload=()=>{ z.textContent=""; z.appendChild(im) }; im.onerror=()=>{ if(IMG.get(p[0])&&im.src.indexOf(".400.")>0) im.src=IMG.get(p[0]) }; im.src=u }
+  if(u){ const im=new Image(); im.alt=show(p); im.onload=()=>{ z.textContent=""; z.appendChild(im) }; im.onerror=()=>{ if(IMG.get(p[0])&&im.src.indexOf(".400.")>0) im.src=IMG.get(p[0]) }; im.src=u }
   zqty(); $("zoom").hidden=false; document.body.style.overflow="hidden";
 }
 function zqty(){ const q=$("zqty"); q.innerHTML=""; q.appendChild(qtyCtl(zcur[0])) }
@@ -313,7 +330,7 @@ function card(p){
   const li=document.createElement("li"), c=document.createElement("div"); c.className="card";
   const ph=thumb(p); ph.className="ph"; ph.onclick=()=>openZoom(p); ph.appendChild(ctl(p[0]));
   const pr=document.createElement("div"); pr.className="price"; pr.textContent=priceLabel(p);
-  const n=document.createElement("div"); n.className="cname"; n.textContent=nice(p[1]); n.onclick=()=>openZoom(p);
+  const n=document.createElement("div"); n.className="cname"; n.textContent=show(p); n.onclick=()=>openZoom(p);
   c.append(ph,pr,n); li.appendChild(c); return li;
 }
 function strip(title,eans){
@@ -332,17 +349,17 @@ function home(){
   const counts=R.map(()=>0); P.forEach(p=>counts[p[2]]++);
   R.map((r,i)=>[r,i]).sort((a,b)=>counts[b[1]]-counts[a[1]]).forEach(([r,i])=>{
     const b=document.createElement("button"); b.className="tile"; b.innerHTML="<i></i><span></span>"; b.firstChild.textContent=ICON[r]||"🛒"; b.lastChild.textContent=r;
-    b.onclick=()=>{rubro=i;shown=PAGE;chips();render();window.scrollTo(0,0)}; g.appendChild(b);
+    b.onclick=()=>{rubro=i;sub=-1;shown=PAGE;chips();render();window.scrollTo(0,0)}; g.appendChild(b);
   });
   sec.append(h,g); el.appendChild(sec);
 }
 function row(p, inCart){
   const li=document.createElement("li"); li.className="item";
   const left=document.createElement("div"); left.style.minWidth="0";
-  const n=document.createElement("div"); n.className="name"; n.textContent=nice(p[1]);
+  const n=document.createElement("div"); n.className="name"; n.textContent=show(p);
   const m=document.createElement("div"); m.className="meta";
   const q=cart.get(p[0])||0;
-  m.textContent = inCart ? (stepOf(p) ? qLabel(p,q)+" × "+priceLabel(p)+" = "+fmt(lineTotal(p,q))+" aprox." : q+" × "+fmt(p[3])+" = "+fmt(q*p[3])) : R[p[2]];
+  m.textContent = inCart ? (stepOf(p) ? qLabel(p,q)+" × "+priceLabel(p)+" = "+fmt(lineTotal(p,q))+" aprox." : q+" × "+fmt(p[3])+" = "+fmt(q*p[3])) : (S[p[5]]||R[p[2]]);
   left.append(n,m);
   const right=document.createElement("div"); right.className="right";
   const pr=document.createElement("div"); pr.className="price"; pr.textContent=priceLabel(p);
@@ -360,7 +377,7 @@ function render(){
   const frag=document.createDocumentFragment();
   results.slice(0,shown).forEach(p=>frag.appendChild(card(p)));
   list.appendChild(frag);
-  $("count").textContent = results.length.toLocaleString("es-AR")+(results.length===1?" producto":" productos")+(rubro>=0?" en "+R[rubro]:"")+(query?" para “"+query+"”":"");
+  $("count").textContent = results.length.toLocaleString("es-AR")+(results.length===1?" producto":" productos")+(rubro>=0?" en "+R[rubro]:"")+(sub>=0?" · "+S[sub]:"")+(query?" para “"+query+"”":"");
   $("more").hidden = results.length<=shown;
   if(!results.length) list.innerHTML='<li class="empty">No encontramos ese producto. Probá con otra palabra o con la marca.</li>';
   bar();
@@ -401,7 +418,7 @@ function closeSheet(){ $("sheet").hidden=true; document.body.style.overflow="" }
 function buildMsg(){
   const t=totals(), v=id=>$(id).value.trim(), pago=document.querySelector('input[name="pago"]:checked').value;
   let s="*Pedido Súper El Tío*\n\n";
-  cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${qLabel(p,q)} x ${nice(p[1])} = ${fmt(lineTotal(p,q))}${stepOf(p)?" (aprox., se cobra el peso real)":""}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"") });
+  cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${qLabel(p,q)} x ${show(p)} = ${fmt(lineTotal(p,q))}${stepOf(p)?" (aprox., se cobra el peso real)":""}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"") });
   s+=`\nProductos: ${fmt(t.sub)}\nEnvío: ${t.envio?fmt(t.envio):"Gratis"}\n*Total: ${fmt(t.total)}*\n\n`;
   s+=`Nombre: ${v("f-nombre")}\nTeléfono: ${v("f-tel")}\nDirección: ${v("f-dir")}${v("f-entre")?" ("+v("f-entre")+")":""}\nTurno: ${$("f-turno").value}\nPago: ${pago}${pago==="Efectivo"&&v("f-vuelto")?" (paga con $"+v("f-vuelto")+")":""}\nReemplazos: ${$("f-reemp").checked?"Consultarme antes":"No reemplazar"}`;
   if(v("f-notas")) s+=`\nNotas: ${v("f-notas")}`;
@@ -434,7 +451,7 @@ $("copy").onclick=()=>{
 $("back").onclick=()=>{ $("step1").hidden=false; $("step2").hidden=true };
 $("count").textContent = "Cargando productos…";
 fetch("productos.json").then(r=>r.json()).then(DATA=>{
-  R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + p[0])); TOK = IDX.map(s => s.split(/[^a-z0-9]+/).filter(Boolean)); byEan = new Map(P.map(p=>[p[0],p]));
+  R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + (p[6]||"") + " " + p[0])); S = DATA.s||[]; TOK = IDX.map(s => s.split(/[^a-z0-9]+/).filter(Boolean)); byEan = new Map(P.map(p=>[p[0],p]));
   try{ const s = JSON.parse(localStorage.getItem("eltio-cart")||"[]"); s.forEach(([e,q])=>{ if(byEan.has(e)) cart.set(e,q) }) }catch(e){}
   chips(); render();
   // Fotos propias subidas a fotos/<EAN>.jpg: se detectan solas desde el repositorio.
@@ -443,7 +460,7 @@ fetch("productos.json").then(r=>r.json()).then(DATA=>{
     t.tree.forEach(x=>{ const m=/^fotos\/(\d+)\.jpg$/i.exec(x.path); if(m&&!LOCAL_IMG.has(m[1])){ LOCAL_IMG.add(m[1]); n++ } });
     if(n) render();
   }).catch(()=>{});
-}).catch(()=>{ $("count").textContent = "No pudimos cargar los productos. Recargá la página." });
+}).catch(err=>{ console.error(err); $("count").textContent = "No pudimos cargar los productos. Recargá la página." });
 </script>
 
 </body>

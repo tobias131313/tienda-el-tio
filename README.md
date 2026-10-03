@@ -16,3 +16,7 @@ Para actualizar precios se regenera `productos.json` desde la última lista de p
 3. Si no hay ninguna, se muestra la inicial del producto.
 
 `fotos.html` es la herramienta del personal: busca o escanea el producto, saca la foto, la deja cuadrada en 800 px y la guarda como `<EAN>.jpg`. Las fotos se suben a la carpeta `fotos/` desde GitHub y la tienda las detecta sola.
+
+## Nombres y precios
+
+`herramientas/armar_productos.py` arma `productos.json` cruzando por EAN la lista de precios del súper (privada, no va en este repositorio) con la lista maestra de nombres y subcategorías. El precio siempre sale de la lista de precios; el nombre de la tienda, de la lista maestra. Un EAN nuevo sale con el nombre de SAG hasta que se le asigne uno.

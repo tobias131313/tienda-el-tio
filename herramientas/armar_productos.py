@@ -34,6 +34,8 @@ def main(lista, maestro_path, salida):
         if rubro in EXCLUIR_RUBROS or not precio or precio <= 0:
             continue
         m = maestro.get(ean, {})
+        # El rubro corregido de la lista maestra manda sobre el de SAG (hay productos mal cargados).
+        rubro = (m.get("rubro") or "").strip() or rubro
         if rubro not in rubros:
             rubros.append(rubro)
         sub = (m.get("subcategoria") or "").strip()

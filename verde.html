@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="es-AR">
 <head>
+<meta name="robots" content="noindex">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Hacé tu pedido al Súper El Tío con precio de góndola y recibilo en tu casa en Moreno. Pedido por WhatsApp.">
 <title>Súper El Tío a Domicilio</title>
-<link rel="icon" href="logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
@@ -15,41 +15,22 @@
   --brand:#1f6b3a; --brand-ink:#ffffff; --tag:#ffd83d; --tag-ink:#1a1a10; --warn:#b4471b; --ok:#1f6b3a;
   --font-display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
   --font-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --r:12px; --phbg:#f1f5ef; --band:#1f6b3a; --band-ink:#ffffff;
+  --r:12px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f1511; --surface:#18201a; --ink:#e8efe9; --muted:#9aaa9e; --line:#2a352d;
-  --brand:#4fb874; --brand-ink:#08130b; --tag:#f2c623; --tag-ink:#1a1a10; --warn:#f08a5d; --ok:#5fca85; --phbg:#222c25; --band:#17502c; --band-ink:#ffffff; color-scheme:dark}}
+  --brand:#4fb874; --brand-ink:#08130b; --tag:#f2c623; --tag-ink:#1a1a10; --warn:#f08a5d; --ok:#5fca85; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1511; --surface:#18201a; --ink:#e8efe9; --muted:#9aaa9e; --line:#2a352d;
-  --brand:#4fb874; --brand-ink:#08130b; --tag:#f2c623; --tag-ink:#1a1a10; --warn:#f08a5d; --ok:#5fca85; --phbg:#222c25; --band:#17502c; --band-ink:#ffffff; color-scheme:dark}
+  --brand:#4fb874; --brand-ink:#08130b; --tag:#f2c623; --tag-ink:#1a1a10; --warn:#f08a5d; --ok:#5fca85; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.4}
 .wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:0 120px}
-header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:0 8px;display:grid;gap:10px;border-bottom:1px solid var(--line);margin-inline:-16px;padding-inline:16px}
-.band{background:var(--band);color:var(--band-ink);margin-inline:-16px;padding:12px 16px 14px;display:grid;gap:10px}
-.logo{flex:none;width:52px;height:52px;border-radius:50%;background:var(--tag);color:var(--tag-ink);display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:.95rem;letter-spacing:-.02em;overflow:hidden}
-.logo img{width:100%;height:100%;object-fit:cover}
-.brandleft{display:flex;align-items:center;gap:10px;min-width:0}
-.band .search{border-color:transparent;background:#fff;color:#18231b}
-.band .search::placeholder{color:#5d6b60}
-.strip{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;font-size:.8rem;color:var(--muted);padding-block:2px;white-space:nowrap}
-.strip::-webkit-scrollbar{display:none}
-.strip b{color:var(--ink)}
-.rubros{display:grid;grid-auto-flow:column;grid-auto-columns:76px;gap:6px;overflow-x:auto;scrollbar-width:none;list-style:none;margin:0;padding:0 0 4px}
-.rubros::-webkit-scrollbar{display:none}
-.rb{font:inherit;display:grid;justify-items:center;gap:4px;background:none;border:0;color:var(--ink);cursor:pointer;padding:4px 0;font-size:.72rem;font-weight:600;line-height:1.15;text-align:center}
-.rb i{font-style:normal;font-size:1.6rem;width:58px;height:58px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center}
-.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-block:4px 18px}
-.how div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;font-size:.78rem;line-height:1.3;color:var(--muted)}
-.how b{display:block;color:var(--ink);font-size:.85rem;margin-bottom:2px}
-.testbar{background:var(--tag);color:var(--tag-ink);text-align:center;font-size:.8rem;font-weight:700;padding:6px 16px;margin-inline:-16px}
-.ph .ico{font-size:2.6rem;filter:grayscale(.15);opacity:.85}
-.zimg .ico{font-size:5rem}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px 8px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
 .brandrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-h1{font-family:var(--font-display);font-weight:800;font-size:1.45rem;margin:0;letter-spacing:-.01em;line-height:1.1}
-h1 span{color:var(--tag)}
-.promise{font-size:.8rem;opacity:.9}
+h1{font-family:var(--font-display);font-weight:800;font-size:1.6rem;margin:0;letter-spacing:-.01em}
+h1 span{color:var(--brand)}
+.promise{font-size:.82rem;color:var(--muted)}
 .search{width:100%;font:inherit;font-size:1rem;padding:12px 14px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .search:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--tag);outline-offset:1px}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
@@ -120,7 +101,7 @@ fieldset input{width:auto}
 .grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
-.ph{position:relative;aspect-ratio:1;border-radius:8px;background:var(--phbg);display:grid;place-items:center;overflow:hidden;cursor:zoom-in;font-family:var(--font-display);font-weight:800;font-size:2.4rem;color:#9aa59c}
+.ph{position:relative;aspect-ratio:1;border-radius:8px;background:#fff;display:grid;place-items:center;overflow:hidden;cursor:zoom-in;font-family:var(--font-display);font-weight:800;font-size:2.4rem;color:#9aa59c}
 .ph img{width:100%;height:100%;object-fit:contain}
 .ph .ctl{position:absolute;right:6px;bottom:6px;font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--ink)}
 .ph .qty button{width:32px;height:32px;font-size:1.1rem;line-height:1;padding:0}
@@ -142,12 +123,6 @@ fieldset input{width:auto}
 .note{font-size:.8rem;padding:6px 8px;margin-top:6px}
 .forgot{display:grid;gap:8px;margin-top:14px}
 .forgot h3{margin:0;font-size:1rem;font-family:var(--font-display);font-weight:800}
-/* Diseño A: Azul con amarillo */
-:root{--bg:#f2f4f8;--line:#d9dfea;--ink:#141c2e;--muted:#5a647a;--brand:#00337f;--brand-ink:#fff;--tag:#f2c200;--tag-ink:#0b2150;--band:#00337f;--band-ink:#fff;--phbg:#eef1f7}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0d1220;--surface:#161d2e;--line:#27304a;--ink:#e9edf6;--muted:#9aa4bb;--brand:#f2c200;--brand-ink:#0b2150;--tag:#f2c200;--tag-ink:#0b2150;--band:#0a2a66;--band-ink:#fff;--phbg:#1d2538}}
-:root[data-theme="dark"]{--bg:#0d1220;--surface:#161d2e;--line:#27304a;--ink:#e9edf6;--muted:#9aa4bb;--brand:#f2c200;--brand-ink:#0b2150;--tag:#f2c200;--tag-ink:#0b2150;--band:#0a2a66;--band-ink:#fff;--phbg:#1d2538}
-.band{border-bottom:4px solid var(--tag)}
-.logo{background:#fff;box-shadow:0 0 0 2px var(--tag)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 <style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
@@ -155,20 +130,21 @@ fieldset input{width:auto}
 <body>
 
 <div class="wrap">
-  <div class="testbar" id="testbar" hidden>Modo prueba: los pedidos llegan marcados como PRUEBA</div>
   <header class="top">
-    <div class="band">
-      <div class="brandleft">
-        <div class="logo"><img src="logo.jpg" alt="Supermercado El Tío"></div>
-        <div><h1>Súper <span>El Tío</span></h1><div class="promise">Tu súper de Moreno, a domicilio</div></div>
-      </div>
-      <input id="q" class="search" type="search" placeholder="Buscá un producto o marca" autocomplete="off" aria-label="Buscar producto">
+    <div class="brandrow">
+      <h1>Súper <span>El Tío</span></h1>
+      <div class="promise">Precio de góndola · Moreno</div>
     </div>
+    <input id="q" class="search" type="search" placeholder="Buscá un producto o marca" autocomplete="off" aria-label="Buscar producto">
     <div class="chips" id="chips" role="toolbar" aria-label="Rubros"></div>
     <div class="chips" id="subchips" role="toolbar" aria-label="Subcategorías" hidden></div>
   </header>
 
-  <div class="strip" style="margin-block:10px 12px"><span>🛵 Envío <b>$2.000</b> · gratis desde <b>$50.000</b></span><span>🕑 Entregas <b>14 a 17</b> y <b>18 a 21</b> hs</span><span>🧾 Mínimo <b>$25.000</b></span><span>💳 Mercado Pago o efectivo</span></div>
+  <div class="info">
+    <span class="pill">Pedido mínimo <b>$25.000</b></span>
+    <span class="pill">Envío <b>$2.000</b> · gratis desde <b>$50.000</b></span>
+    <span class="pill">Entregas <b>14 a 17</b> y <b>18 a 21</b> hs</span>
+  </div>
     <div class="count" id="count"></div>
   <div id="home"></div>
   <ul class="grid" id="list"></ul>
@@ -227,7 +203,6 @@ fieldset input{width:auto}
     </div>
     <div id="step2" class="done" hidden>
       <p>Tu pedido está listo. Tocá el botón para mandarlo por WhatsApp. Si no se abre, copiá el texto y mandalo al número del súper.</p>
-      <p class="demo" id="testthanks" hidden>¡Gracias por probar! Después contanos qué te costó o qué cambiarías.</p>
       <a class="cta wa" id="walink" href="#" target="_blank" rel="noopener"><span>Abrir WhatsApp</span><span>➜</span></a>
       <button class="ghost" id="copy">Copiar pedido</button>
       <div class="msg" id="msg"></div>
@@ -238,8 +213,6 @@ fieldset input{width:auto}
 
 <script>
 const WHATSAPP = "5491128656389"; // WhatsApp del súper: 11 2865-6389
-// Link de prueba para amigos: ?prueba marca los pedidos como PRUEBA (se recuerda mientras navegan).
-let PRUEBA=false; try{ if(/[?&]prueba/.test(location.search)) sessionStorage.setItem("eltio-prueba","1"); PRUEBA=sessionStorage.getItem("eltio-prueba")==="1" }catch(e){ PRUEBA=/[?&]prueba/.test(location.search) }
 const MIN = 25000, ENVIO = 2000, GRATIS = 50000, PAGE = 60;
 let R = [], P = [], S = [], IDX = [], TOK = [], byEan = new Map(), LOCAL_IMG = new Set();
 // Productos por peso: p[4] = gramos por cada toque del +. El precio de lista es por kg.
@@ -318,9 +291,9 @@ function pumpImg(){
   }
 }
 const imgObs = "IntersectionObserver" in window ? new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ imgObs.unobserve(en.target); imgQueue.push([en.target.dataset.ean,en.target]); pumpImg() } }),{rootMargin:"200px"}) : null;
-function showImg(box,u){ const im=new Image(); im.alt=""; im.onload=()=>{ [...box.childNodes].forEach(n=>{ if(n.nodeType===3||(n.classList&&n.classList.contains("ico"))) n.remove() }); box.prepend(im) }; im.src=u }
+function showImg(box,u){ const im=new Image(); im.alt=""; im.onload=()=>{ [...box.childNodes].forEach(n=>{ if(n.nodeType===3) n.remove() }); box.prepend(im) }; im.src=u }
 function thumb(p){
-  const box=document.createElement("div"); box.className="thumb"; box.innerHTML='<span class="ico"></span>'; box.firstChild.textContent=ICON[R[p[2]]]||"🛒"; box.dataset.ean=p[0];
+  const box=document.createElement("div"); box.className="thumb"; box.textContent=(p[1].match(/[A-ZÁÉÍÓÚÑ0-9]/)||["·"])[0]; box.dataset.ean=p[0];
   const ean=p[0];
   if(LOCAL_IMG.has(ean)) showImg(box,"fotos/"+ean+".jpg");
   else if(IMG.has(ean)){ if(IMG.get(ean)) showImg(box,IMG.get(ean)) }
@@ -331,7 +304,7 @@ const big=u=>u.replace(/\.(100|200)\.jpg$/,".400.jpg");
 let zcur=null;
 function openZoom(p){
   zcur=p; $("zname").textContent=show(p); $("zrubro").textContent=R[p[2]]+(S[p[5]]?" · "+S[p[5]]:""); $("zprice").textContent=priceLabel(p);
-  const z=$("zimg"); z.innerHTML='<span class="ico"></span>'; z.firstChild.textContent=ICON[R[p[2]]]||"🛒";
+  const z=$("zimg"); z.textContent=(p[1].match(/[A-ZÁÉÍÓÚÑ0-9]/)||["·"])[0];
   const u=LOCAL_IMG.has(p[0])?"fotos/"+p[0]+".jpg":(IMG.get(p[0])?big(IMG.get(p[0])):"");
   if(u){ const im=new Image(); im.alt=show(p); im.onload=()=>{ z.textContent=""; z.appendChild(im) }; im.onerror=()=>{ if(IMG.get(p[0])&&im.src.indexOf(".400.")>0) im.src=IMG.get(p[0]) }; im.src=u }
   zqty(); $("zoom").hidden=false; document.body.style.overflow="hidden";
@@ -370,19 +343,16 @@ function strip(title,eans){
 }
 function home(){
   const el=$("home"); el.innerHTML="";
+  PORTADA.forEach(([t,e])=>{ const s=strip(t,e); if(s) el.appendChild(s) });
   const sec=document.createElement("section"); sec.className="sec";
   const h=document.createElement("h2"); h.textContent="Rubros";
-  const g=document.createElement("div"); g.className="rubros";
+  const g=document.createElement("div"); g.className="tiles";
   const counts=R.map(()=>0); P.forEach(p=>counts[p[2]]++);
   R.map((r,i)=>[r,i]).sort((a,b)=>counts[b[1]]-counts[a[1]]).forEach(([r,i])=>{
-    const b=document.createElement("button"); b.className="rb"; b.innerHTML="<i></i><span></span>"; b.firstChild.textContent=ICON[r]||"🛒"; b.lastChild.textContent=r;
+    const b=document.createElement("button"); b.className="tile"; b.innerHTML="<i></i><span></span>"; b.firstChild.textContent=ICON[r]||"🛒"; b.lastChild.textContent=r;
     b.onclick=()=>{rubro=i;sub=-1;shown=PAGE;chips();render();window.scrollTo(0,0)}; g.appendChild(b);
   });
   sec.append(h,g); el.appendChild(sec);
-  const how=document.createElement("div"); how.className="how";
-  how.innerHTML="<div><b>1. Elegí</b>Sumá productos al carrito.</div><div><b>2. Mandá</b>El pedido sale por WhatsApp.</div><div><b>3. Recibí</b>Te lo llevamos en el turno.</div>";
-  el.appendChild(how);
-  PORTADA.forEach(([t,e])=>{ const s=strip(t,e); if(s) el.appendChild(s) });
 }
 function row(p, inCart){
   const li=document.createElement("li"); li.className="item";
@@ -448,7 +418,7 @@ function openSheet(){ $("step1").hidden=false; $("step2").hidden=true; renderCar
 function closeSheet(){ $("sheet").hidden=true; document.body.style.overflow="" }
 function buildMsg(){
   const t=totals(), v=id=>$(id).value.trim(), pago=document.querySelector('input[name="pago"]:checked').value;
-  let s=(PRUEBA?"*⚠️ PEDIDO DE PRUEBA (no armar)*\n":"")+"*Pedido Súper El Tío*\n\n";
+  let s="*Pedido Súper El Tío*\n\n";
   cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${qLabel(p,q)} x ${show(p)} = ${fmt(lineTotal(p,q))}${stepOf(p)?" (aprox., se cobra el peso real)":""}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"") });
   s+=`\nProductos: ${fmt(t.sub)}\nEnvío: ${t.envio?fmt(t.envio):"Gratis"}\n*Total: ${fmt(t.total)}*\n\n`;
   s+=`Nombre: ${v("f-nombre")}\nTeléfono: ${v("f-tel")}\nDirección: ${v("f-dir")}${v("f-entre")?" ("+v("f-entre")+")":""}\nTurno: ${$("f-turno").value}\nPago: ${pago}${pago==="Efectivo"&&v("f-vuelto")?" (paga con $"+v("f-vuelto")+")":""}\nReemplazos: ${$("f-reemp").checked?"Consultarme antes":"No reemplazar"}`;
@@ -473,14 +443,13 @@ $("form").addEventListener("submit",e=>{
   const msg=buildMsg();
   $("msg").textContent=msg;
   $("walink").href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(msg);
-  $("step1").hidden=true; $("step2").hidden=false; $("copy").textContent="Copiar pedido"; $("testthanks").hidden=!PRUEBA;
+  $("step1").hidden=true; $("step2").hidden=false; $("copy").textContent="Copiar pedido";
 });
 $("copy").onclick=()=>{
   const txt=$("msg").textContent;
   navigator.clipboard.writeText(txt).then(()=>{$("copy").textContent="Pedido copiado"}).catch(()=>{ const r=document.createRange(); r.selectNodeContents($("msg")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); $("copy").textContent="Texto seleccionado: copialo con el teclado" });
 };
 $("back").onclick=()=>{ $("step1").hidden=false; $("step2").hidden=true };
-$("testbar").hidden=!PRUEBA;
 $("count").textContent = "Cargando productos…";
 fetch("productos.json").then(r=>r.json()).then(DATA=>{
   R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + (p[6]||"") + " " + p[0])); S = DATA.s||[]; TOK = IDX.map(s => s.split(/[^a-z0-9]+/).filter(Boolean)); byEan = new Map(P.map(p=>[p[0],p]));

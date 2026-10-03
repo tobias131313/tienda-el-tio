@@ -140,6 +140,9 @@ fieldset input{width:auto}
 .tile{font:inherit;display:grid;gap:4px;justify-items:center;text-align:center;padding:12px 6px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:.8rem;font-weight:600;line-height:1.2}
 .tile i{font-style:normal;font-size:1.7rem}
 .note{font-size:.8rem;padding:6px 8px;margin-top:6px}
+.clear{justify-self:start;margin-top:10px;font:inherit;font-size:.85rem;font-weight:600;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--warn);cursor:pointer}
+.clear.sure{background:var(--warn);color:#fff;border-color:var(--warn)}
+#step1{display:grid}
 .forgot{display:grid;gap:8px;margin-top:14px}
 .forgot h3{margin:0;font-size:1rem;font-family:var(--font-display);font-weight:800}
 /* Diseño A: Azul con amarillo */
@@ -199,6 +202,7 @@ fieldset input{width:auto}
     <div class="phead"><h2 id="ptitle">Tu pedido</h2><button class="x" id="close">Seguir comprando</button></div>
     <div id="step1">
       <ul class="list" id="cartlist"></ul>
+      <button class="clear" id="clear" type="button">Vaciar carrito</button>
       <div class="forgot" id="forgot"></div>
       <div class="totals" id="totals"></div>
       <form id="form" novalidate>
@@ -479,6 +483,15 @@ $("form").addEventListener("submit",e=>{
 $("copy").onclick=()=>{
   const txt=$("msg").textContent;
   navigator.clipboard.writeText(txt).then(()=>{$("copy").textContent="Pedido copiado"}).catch(()=>{ const r=document.createRange(); r.selectNodeContents($("msg")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); $("copy").textContent="Texto seleccionado: copialo con el teclado" });
+};
+// Vaciar carrito: pide un segundo toque para confirmar (los diálogos del navegador no sirven en todos los celulares).
+let clearTimer=null;
+$("clear").onclick=()=>{
+  const b=$("clear");
+  if(!b.classList.contains("sure")){ b.classList.add("sure"); b.textContent="¿Seguro? Tocá de nuevo para vaciar"; clearTimer=setTimeout(()=>{ b.classList.remove("sure"); b.textContent="Vaciar carrito" },4000); return }
+  clearTimeout(clearTimer); b.classList.remove("sure"); b.textContent="Vaciar carrito";
+  cart.clear(); notes.clear(); saveNotes(); try{ localStorage.setItem("eltio-cart","[]") }catch(e){}
+  closeSheet(); render();
 };
 $("back").onclick=()=>{ $("step1").hidden=false; $("step2").hidden=true };
 $("testbar").hidden=!PRUEBA;

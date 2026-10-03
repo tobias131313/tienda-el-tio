@@ -41,7 +41,9 @@ h1 span{color:var(--brand)}
 .pill b{color:var(--ink)}
 .count{font-size:.85rem;color:var(--muted);margin-block:4px 8px}
 ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.thumb{width:56px;height:56px;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;font-family:var(--font-display);font-weight:800;font-size:1.3rem;color:var(--muted)}
+.thumb img{width:100%;height:100%;object-fit:contain;background:#fff}
 .item .name{font-weight:600;min-width:0;overflow-wrap:anywhere}
 .item .meta{font-size:.75rem;color:var(--muted);margin-top:2px}
 .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
@@ -160,7 +162,7 @@ fieldset input{width:auto}
 <script>
 const WHATSAPP = "5491128656389"; // WhatsApp del súper: 11 2865-6389
 const MIN = 25000, ENVIO = 2000, GRATIS = 50000, PAGE = 60;
-let R = [], P = [], IDX = [], byEan = new Map();
+let R = [], P = [], IDX = [], byEan = new Map(), LOCAL_IMG = new Set();
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 const nice = s => s.toLowerCase().replace(/(^|[\s(/.-])([a-záéíóúñü])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(\d+)\s?(Gr|Grs|Kg|Ml|Lt|Cc|Un|Cm)\b/gi,(m,a,b)=>a+" "+b.toLowerCase()).replace(/\bX\b/g,"x");
@@ -193,6 +195,28 @@ function qtyCtl(e){
   const p=document.createElement("button"); p.textContent="+"; p.setAttribute("aria-label","Agregar uno"); p.onclick=()=>setQ(e,q+1);
   wrap.append(m,s,p); return wrap;
 }
+// Fotos: se buscan por código de barras en Open Food Facts (base libre) solo para los productos visibles.
+const IMG = new Map(); let imgQueue = [], imgActive = 0;
+try{ Object.entries(JSON.parse(localStorage.getItem("eltio-img")||"{}")).forEach(([k,v])=>IMG.set(k,v)) }catch(e){}
+function saveImg(){ try{ localStorage.setItem("eltio-img", JSON.stringify(Object.fromEntries([...IMG].slice(-3000)))) }catch(e){} }
+function pumpImg(){
+  while(imgActive<4 && imgQueue.length){
+    const [ean, box] = imgQueue.shift(); imgActive++;
+    fetch("https://world.openfoodfacts.org/api/v2/product/"+ean+".json?fields=image_front_small_url")
+      .then(r=>r.ok?r.json():null).then(j=>{ const u=j&&j.product&&j.product.image_front_small_url||""; IMG.set(ean,u); saveImg(); if(u) showImg(box,u) })
+      .catch(()=>{}).finally(()=>{ imgActive--; pumpImg() });
+  }
+}
+const imgObs = "IntersectionObserver" in window ? new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ imgObs.unobserve(en.target); imgQueue.push([en.target.dataset.ean,en.target]); pumpImg() } }),{rootMargin:"200px"}) : null;
+function showImg(box,u){ const im=new Image(); im.alt=""; im.loading="lazy"; im.onload=()=>{ box.textContent=""; box.appendChild(im) }; im.src=u }
+function thumb(p){
+  const box=document.createElement("div"); box.className="thumb"; box.textContent=(p[1].match(/[A-ZÁÉÍÓÚÑ0-9]/)||["·"])[0]; box.dataset.ean=p[0];
+  const ean=p[0];
+  if(LOCAL_IMG.has(ean)) showImg(box,"fotos/"+ean+".jpg");
+  else if(IMG.has(ean)){ if(IMG.get(ean)) showImg(box,IMG.get(ean)) }
+  else if(ean.length>=8 && imgObs) imgObs.observe(box);
+  return box;
+}
 function row(p, inCart){
   const li=document.createElement("li"); li.className="item";
   const left=document.createElement("div"); left.style.minWidth="0";
@@ -204,10 +228,10 @@ function row(p, inCart){
   const right=document.createElement("div"); right.className="right";
   const pr=document.createElement("div"); pr.className="price"; pr.textContent=fmt(p[3]);
   right.append(pr, qtyCtl(p[0]));
-  li.append(left,right); return li;
+  li.prepend(thumb(p)); li.append(left,right); return li;
 }
 function render(){
-  filter();
+  filter(); imgQueue=[];
   const list=$("list"); list.innerHTML="";
   const frag=document.createDocumentFragment();
   results.slice(0,shown).forEach(p=>frag.appendChild(row(p,false)));
@@ -282,7 +306,7 @@ $("copy").onclick=()=>{
 $("back").onclick=()=>{ $("step1").hidden=false; $("step2").hidden=true };
 $("count").textContent = "Cargando productos…";
 fetch("productos.json").then(r=>r.json()).then(DATA=>{
-  R = DATA.r; P = DATA.p; IDX = P.map(p => norm(p[1] + " " + p[0])); byEan = new Map(P.map(p=>[p[0],p]));
+  R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + p[0])); byEan = new Map(P.map(p=>[p[0],p]));
   try{ const s = JSON.parse(localStorage.getItem("eltio-cart")||"[]"); s.forEach(([e,q])=>{ if(byEan.has(e)) cart.set(e,q) }) }catch(e){}
   chips(); render();
 }).catch(()=>{ $("count").textContent = "No pudimos cargar los productos. Recargá la página." });

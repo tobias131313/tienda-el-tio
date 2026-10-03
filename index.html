@@ -220,6 +220,7 @@ fieldset input{width:auto}
         </fieldset>
         <label for="f-vuelto" id="vueltobox" hidden>¿Con cuánto pagás? (para llevarte el vuelto)<input id="f-vuelto" inputmode="numeric" placeholder="Ej: 30000"></label>
         <label class="check" for="f-reemp"><input type="checkbox" id="f-reemp" checked>Si falta algo, escribime por WhatsApp para ofrecerme un reemplazo</label>
+        <label class="check" for="f-ofertas"><input type="checkbox" id="f-ofertas">Quiero recibir ofertas del súper por WhatsApp</label>
         <label for="f-notas">Notas<textarea id="f-notas" rows="2" placeholder="Ej: tocar timbre 2B"></textarea></label>
         <div class="err" id="err" hidden></div>
         <button class="cta" type="submit"><span>Enviar pedido por WhatsApp</span><span id="ftotal"></span></button>
@@ -451,7 +452,7 @@ function buildMsg(){
   let s=(PRUEBA?"*⚠️ PEDIDO DE PRUEBA (no armar)*\n":"")+"*Pedido Súper El Tío*\n\n";
   cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${qLabel(p,q)} x ${show(p)} = ${fmt(lineTotal(p,q))}${stepOf(p)?" (aprox., se cobra el peso real)":""}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"") });
   s+=`\nProductos: ${fmt(t.sub)}\nEnvío: ${t.envio?fmt(t.envio):"Gratis"}\n*Total: ${fmt(t.total)}*\n\n`;
-  s+=`Nombre: ${v("f-nombre")}\nTeléfono: ${v("f-tel")}\nDirección: ${v("f-dir")}${v("f-entre")?" ("+v("f-entre")+")":""}\nTurno: ${$("f-turno").value}\nPago: ${pago}${pago==="Efectivo"&&v("f-vuelto")?" (paga con $"+v("f-vuelto")+")":""}\nReemplazos: ${$("f-reemp").checked?"Consultarme antes":"No reemplazar"}`;
+  s+=`Nombre: ${v("f-nombre")}\nTeléfono: ${v("f-tel")}\nDirección: ${v("f-dir")}${v("f-entre")?" ("+v("f-entre")+")":""}\nTurno: ${$("f-turno").value}\nPago: ${pago}${pago==="Efectivo"&&v("f-vuelto")?" (paga con $"+v("f-vuelto")+")":""}\nReemplazos: ${$("f-reemp").checked?"Consultarme antes":"No reemplazar"}\nOfertas por WhatsApp: ${$("f-ofertas").checked?"Sí":"No"}`;
   if(v("f-notas")) s+=`\nNotas: ${v("f-notas")}`;
   return s;
 }

@@ -1,0 +1,2 @@
+Fotos propias de productos. Nombre: <código de barras>.jpg (ej. 7791019172101.jpg).
+Se cargan desde fotos.html.

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Fotos de Productos · El Tío</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Figtree:wght@400;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --ink:#18231b; --muted:#5d6b60; --line:#dde3da;
+  --brand:#1f6b3a; --brand-ink:#ffffff; --tag:#ffd83d; --warn:#b4471b;
+  --font-display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --font-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1511; --surface:#18201a; --ink:#e8efe9; --muted:#9aaa9e; --line:#2a352d;
+  --brand:#4fb874; --brand-ink:#08130b; --tag:#f2c623; --warn:#f08a5d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1511; --surface:#18201a; --ink:#e8efe9; --muted:#9aaa9e; --line:#2a352d;
+  --brand:#4fb874; --brand-ink:#08130b; --tag:#f2c623; --warn:#f08a5d; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.4}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:16px 40px;display:grid;gap:14px}
+h1{font-family:var(--font-display);font-weight:800;font-size:1.5rem;margin:0}
+p{margin:0}
+.muted{color:var(--muted);font-size:.88rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+input[type=search]{width:100%;font:inherit;font-size:1rem;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button,.btn{font:inherit;font-weight:700;padding:12px 14px;border-radius:10px;border:0;background:var(--brand);color:var(--brand-ink);cursor:pointer;text-align:center;text-decoration:none;display:block}
+.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible,.btn:focus-visible{outline:3px solid var(--tag);outline-offset:1px}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+li button{width:100%;display:flex;justify-content:space-between;gap:10px;text-align:left;font-weight:600;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+li small{color:var(--muted);font-weight:400;white-space:nowrap}
+.ok{color:var(--brand);font-weight:700}
+.sel{font-weight:700;font-size:1.05rem}
+.prev{width:100%;max-width:320px;aspect-ratio:1;object-fit:contain;background:#fff;border-radius:10px;border:1px solid var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+video{width:100%;border-radius:10px;background:#000}
+ol{margin:0;padding-left:20px;display:grid;gap:4px}
+.err{color:var(--warn);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Fotos de productos</h1>
+  <p class="muted">Para el personal del súper. Buscá el producto, sacale una foto de frente sobre fondo blanco y descargala. Después se suben todas juntas a la tienda.</p>
+
+  <div class="card">
+    <div class="row">
+      <button id="scan" class="ghost">Escanear código de barras</button>
+    </div>
+    <video id="video" playsinline muted hidden></video>
+    <input id="q" type="search" placeholder="O escribí el nombre o el código" autocomplete="off" aria-label="Buscar producto">
+    <div class="muted" id="stats">Cargando productos…</div>
+    <ul id="list"></ul>
+  </div>
+
+  <div class="card" id="work" hidden>
+    <div class="sel" id="selname"></div>
+    <div class="muted" id="selmeta"></div>
+    <label class="btn" for="cam">Sacar foto</label>
+    <input id="cam" type="file" accept="image/*" capture="environment" hidden>
+    <img id="prev" class="prev" alt="Vista previa de la foto" hidden>
+    <div class="row" id="actions" hidden>
+      <a class="btn" id="dl" href="#" download>Guardar foto</a>
+      <label class="btn ghost" for="cam">Sacar otra</label>
+    </div>
+    <div class="muted" id="saved"></div>
+  </div>
+
+  <div class="card">
+    <strong>Cómo subir las fotos a la tienda</strong>
+    <ol>
+      <li>Las fotos guardadas quedan en <b>Descargas</b> del celular, con el código de barras como nombre.</li>
+      <li>Abrí la carpeta de fotos de la tienda con el botón de abajo (hay que entrar con la cuenta de GitHub del súper).</li>
+      <li>Tocá <b>choose your files</b>, elegí las fotos y tocá <b>Commit changes</b>.</li>
+      <li>En unos minutos aparecen en la tienda.</li>
+    </ol>
+    <a class="btn ghost" href="https://github.com/tobias131313/tienda-el-tio/upload/main/fotos" target="_blank" rel="noopener">Subir fotos a la tienda</a>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+let P=[],R=[],IDX=[],HAVE=new Set(),DONE=new Set(),cur=null;
+try{ JSON.parse(localStorage.getItem("eltio-fotos-hechas")||"[]").forEach(e=>DONE.add(e)) }catch(e){}
+function markDone(e){ DONE.add(e); try{ localStorage.setItem("eltio-fotos-hechas",JSON.stringify([...DONE])) }catch(err){} }
+function stats(){ const n=P.filter(p=>HAVE.has(p[0])||DONE.has(p[0])).length; $("stats").textContent=n.toLocaleString("es-AR")+" de "+P.length.toLocaleString("es-AR")+" productos con foto propia (contando las de este celu)." }
+function render(){
+  const w=norm($("q").value).split(/\s+/).filter(Boolean), ul=$("list"); ul.innerHTML="";
+  if(!w.length) return;
+  let n=0;
+  for(let i=0;i<P.length&&n<30;i++){
+    if(!w.every(x=>IDX[i].includes(x))) continue; n++;
+    const p=P[i], li=document.createElement("li"), b=document.createElement("button");
+    const has=HAVE.has(p[0])||DONE.has(p[0]);
+    b.innerHTML="<span></span><small></small>"; b.firstChild.textContent=p[1]; b.lastChild.textContent=has?"✓ con foto":R[p[2]];
+    if(has) b.lastChild.className="ok";
+    b.onclick=()=>pick(p); li.appendChild(b); ul.appendChild(li);
+  }
+  if(!n) ul.innerHTML='<li class="muted">No aparece. Probá con otra palabra o escaneá el código.</li>';
+}
+function pick(p){
+  cur=p; $("work").hidden=false; $("selname").textContent=p[1];
+  $("selmeta").textContent="Código "+p[0]+" · "+R[p[2]]+(HAVE.has(p[0])?" · ya tiene foto en la tienda (la nueva la reemplaza)":"");
+  $("prev").hidden=true; $("actions").hidden=true; $("saved").textContent="";
+  $("work").scrollIntoView({behavior:"smooth",block:"start"});
+}
+$("cam").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f||!cur) return;
+  const img=new Image(); img.onload=()=>{
+    const S=800, c=document.createElement("canvas"); c.width=S; c.height=S;
+    const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,S,S);
+    const k=Math.min(S/img.width,S/img.height); const w=img.width*k,h=img.height*k;
+    x.drawImage(img,(S-w)/2,(S-h)/2,w,h);
+    c.toBlob(b=>{ const u=URL.createObjectURL(b); $("prev").src=u; $("prev").hidden=false; const a=$("dl"); a.href=u; a.download=cur[0]+".jpg"; $("actions").hidden=false },"image/jpeg",.82);
+    URL.revokeObjectURL(img.src);
+  };
+  img.src=URL.createObjectURL(f); e.target.value="";
+});
+$("dl").addEventListener("click",()=>{ markDone(cur[0]); $("saved").textContent="Guardada como "+cur[0]+".jpg. Buscá el próximo producto."; stats(); render() });
+$("q").addEventListener("input",render);
+// Escáner: usa el lector de códigos del navegador (Chrome en Android).
+$("scan").onclick=async()=>{
+  if(!("BarcodeDetector" in window)){ $("stats").innerHTML='<span class="err">Este celular no puede escanear desde acá. Escribí el código o el nombre.</span>'; return }
+  const v=$("video");
+  try{
+    const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    v.srcObject=st; v.hidden=false; await v.play();
+    const det=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128"]});
+    const stop=()=>{ st.getTracks().forEach(t=>t.stop()); v.hidden=true };
+    const loop=async()=>{
+      if(v.hidden) return;
+      try{ const r=await det.detect(v); if(r.length){ const code=r[0].rawValue; stop(); const p=P.find(p=>p[0]===code||p[0]===code.replace(/^0+/,"")); if(p){ $("q").value=code; render(); pick(p) } else { $("q").value=code; render(); $("stats").innerHTML='<span class="err">El código '+code+' no está en la lista de productos.</span>' } return } }catch(err){}
+      requestAnimationFrame(loop);
+    };
+    loop();
+  }catch(err){ $("stats").innerHTML='<span class="err">No se pudo abrir la cámara. Dale permiso al navegador o escribí el código.</span>' }
+};
+Promise.all([
+  fetch("productos.json").then(r=>r.json()),
+  fetch("https://api.github.com/repos/tobias131313/tienda-el-tio/git/trees/main?recursive=1").then(r=>r.ok?r.json():{tree:[]}).catch(()=>({tree:[]}))
+]).then(([d,t])=>{
+  P=d.p; R=d.r; IDX=P.map(p=>norm(p[1]+" "+p[0]));
+  (d.f||[]).forEach(e=>HAVE.add(e));
+  (t.tree||[]).forEach(x=>{ const m=/^fotos\/(\d+)\.jpg$/i.exec(x.path); if(m) HAVE.add(m[1]) });
+  stats();
+}).catch(()=>{ $("stats").textContent="No se pudieron cargar los productos. Recargá la página." });
+</script>
+</body>
+</html>

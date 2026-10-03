@@ -309,6 +309,12 @@ fetch("productos.json").then(r=>r.json()).then(DATA=>{
   R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + p[0])); byEan = new Map(P.map(p=>[p[0],p]));
   try{ const s = JSON.parse(localStorage.getItem("eltio-cart")||"[]"); s.forEach(([e,q])=>{ if(byEan.has(e)) cart.set(e,q) }) }catch(e){}
   chips(); render();
+  // Fotos propias subidas a fotos/<EAN>.jpg: se detectan solas desde el repositorio.
+  fetch("https://api.github.com/repos/tobias131313/tienda-el-tio/git/trees/main?recursive=1").then(r=>r.ok?r.json():null).then(t=>{
+    if(!t||!t.tree) return; let n=0;
+    t.tree.forEach(x=>{ const m=/^fotos\/(\d+)\.jpg$/i.exec(x.path); if(m&&!LOCAL_IMG.has(m[1])){ LOCAL_IMG.add(m[1]); n++ } });
+    if(n) render();
+  }).catch(()=>{});
 }).catch(()=>{ $("count").textContent = "No pudimos cargar los productos. Recargá la página." });
 </script>
 

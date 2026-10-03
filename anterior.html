@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Hacé tu pedido al Súper El Tío con precio de góndola y recibilo en tu casa en Moreno. Pedido por WhatsApp.">
 <title>Súper El Tío a Domicilio</title>
+<meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
@@ -96,31 +97,6 @@ fieldset input{width:auto}
 .wa{display:block;text-align:center;text-decoration:none}
 .ghost{font:inherit;font-weight:600;padding:12px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .demo{font-size:.78rem;color:var(--warn);font-weight:600}
-.grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media (min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
-.ph{position:relative;aspect-ratio:1;border-radius:8px;background:#fff;display:grid;place-items:center;overflow:hidden;cursor:zoom-in;font-family:var(--font-display);font-weight:800;font-size:2.4rem;color:#9aa59c}
-.ph img{width:100%;height:100%;object-fit:contain}
-.ph .ctl{position:absolute;right:6px;bottom:6px;font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--ink)}
-.ph .qty button{width:32px;height:32px;font-size:1.1rem;line-height:1;padding:0}
-.ph .plus{width:40px;height:40px;border-radius:50%;border:0;background:var(--brand);color:var(--brand-ink);font:inherit;font-size:1.5rem;font-weight:700;line-height:1;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25)}
-.ph .qty{background:var(--surface);border-radius:999px;padding:3px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
-.ph .qty button{border-radius:50%}
-.card .price{align-self:flex-start;font-size:1rem}
-.card .cname{font-size:.85rem;font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em;cursor:pointer}
-.sec{display:grid;gap:8px;margin-block:6px 18px}
-.sec h2{font-family:var(--font-display);font-weight:800;font-size:1.15rem;margin:0}
-.rowscroll{display:grid;grid-auto-flow:column;grid-auto-columns:42%;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;scrollbar-width:none;list-style:none;margin:0;padding-inline:0}
-.rowscroll::-webkit-scrollbar{display:none}
-.rowscroll>li{scroll-snap-align:start;min-width:0}
-@media (min-width:600px){.rowscroll{grid-auto-columns:28%}}
-.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-@media (min-width:600px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.tile{font:inherit;display:grid;gap:4px;justify-items:center;text-align:center;padding:12px 6px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:.8rem;font-weight:600;line-height:1.2}
-.tile i{font-style:normal;font-size:1.7rem}
-.note{font-size:.8rem;padding:6px 8px;margin-top:6px}
-.forgot{display:grid;gap:8px;margin-top:14px}
-.forgot h3{margin:0;font-size:1rem;font-family:var(--font-display);font-weight:800}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 <style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
@@ -143,8 +119,7 @@ fieldset input{width:auto}
     <span class="pill">Entregas <b>14 a 17</b> y <b>18 a 21</b> hs</span>
   </div>
     <div class="count" id="count"></div>
-  <div id="home"></div>
-  <ul class="grid" id="list"></ul>
+  <ul class="list" id="list"></ul>
   <button class="more" id="more" hidden>Ver más productos</button>
 </div>
 
@@ -172,7 +147,6 @@ fieldset input{width:auto}
     <div class="phead"><h2 id="ptitle">Tu pedido</h2><button class="x" id="close">Seguir comprando</button></div>
     <div id="step1">
       <ul class="list" id="cartlist"></ul>
-      <div class="forgot" id="forgot"></div>
       <div class="totals" id="totals"></div>
       <form id="form" novalidate>
         <label for="f-nombre">Nombre y apellido<input id="f-nombre" required autocomplete="name"></label>
@@ -257,7 +231,7 @@ function pumpImg(){
   }
 }
 const imgObs = "IntersectionObserver" in window ? new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ imgObs.unobserve(en.target); imgQueue.push([en.target.dataset.ean,en.target]); pumpImg() } }),{rootMargin:"200px"}) : null;
-function showImg(box,u){ const im=new Image(); im.alt=""; im.onload=()=>{ [...box.childNodes].forEach(n=>{ if(n.nodeType===3) n.remove() }); box.prepend(im) }; im.src=u }
+function showImg(box,u){ const im=new Image(); im.alt=""; im.onload=()=>{ box.textContent=""; box.appendChild(im) }; im.src=u }
 function thumb(p){
   const box=document.createElement("div"); box.className="thumb"; box.textContent=(p[1].match(/[A-ZÁÉÍÓÚÑ0-9]/)||["·"])[0]; box.dataset.ean=p[0];
   const ean=p[0];
@@ -277,49 +251,6 @@ function openZoom(p){
 }
 function zqty(){ const q=$("zqty"); q.innerHTML=""; q.appendChild(qtyCtl(zcur[0])) }
 function closeZoom(){ $("zoom").hidden=true; zcur=null; if($("sheet").hidden) document.body.style.overflow="" }
-const PORTADA=[
-  ["Lo más pedido",["7790895000997","7790742348302","7793704000928","7790070012050","7792540000017","7792180139320","7790070320308","7790070106254","7798094229881","7790742387806","7790990001073","7793253000974"]],
-  ["Para el asado",["480","806","734","2030","7790290101602","7790895000997","7792798012923","7790130003035"]],
-  ["Desayuno y merienda",["7790742348302","7793704000911","7790742387806","7790742345806","7795184119770","7790550022210","7793890262131"]],
-  ["Limpieza de la casa",["7793253000974","7790990001073","7790990000601","7791290794115"]]
-];
-const OLVIDO=["2030","7798094229881","7790895000997","480","7792540000017","7790742348302","7792798012923"];
-const ICON={"Almacén":"🥫","Perfumería e Higiene":"🧴","Limpieza":"🧽","Lácteos":"🥛","Bebidas con alcohol":"🍷","Bebidas sin alcohol":"🥤","Galletitas":"🍪","Golosinas y Kiosco":"🍬","Bazar y Descartables":"🍽️","Panificados":"🍞","Fiambrería":"🧀","Congelados":"🧊","Carnicería":"🥩","Snacks Salados":"🥨","Pastas Frescas":"🍝","Mascotas":"🐾","Bebés":"🍼","Verdulería y Frutas":"🥬"};
-const notes=new Map();
-try{ JSON.parse(localStorage.getItem("eltio-notas")||"[]").forEach(([e,t])=>notes.set(e,t)) }catch(e){}
-function saveNotes(){ try{ localStorage.setItem("eltio-notas",JSON.stringify([...notes])) }catch(e){} }
-function ctl(e){
-  const q=cart.get(e)||0, w=document.createElement("div"); w.className="ctl";
-  if(!q){ const b=document.createElement("button"); b.className="plus"; b.textContent="+"; b.setAttribute("aria-label","Agregar"); b.onclick=ev=>{ev.stopPropagation(); setQ(e,1)}; w.appendChild(b); return w }
-  const c=qtyCtl(e); c.addEventListener("click",ev=>ev.stopPropagation()); w.appendChild(c); return w;
-}
-function card(p){
-  const li=document.createElement("li"), c=document.createElement("div"); c.className="card";
-  const ph=thumb(p); ph.className="ph"; ph.onclick=()=>openZoom(p); ph.appendChild(ctl(p[0]));
-  const pr=document.createElement("div"); pr.className="price"; pr.textContent=fmt(p[3]);
-  const n=document.createElement("div"); n.className="cname"; n.textContent=nice(p[1]); n.onclick=()=>openZoom(p);
-  c.append(ph,pr,n); li.appendChild(c); return li;
-}
-function strip(title,eans){
-  const ps=eans.map(e=>byEan.get(e)).filter(Boolean); if(!ps.length) return null;
-  const sec=document.createElement("section"); sec.className="sec";
-  const h=document.createElement("h2"); h.textContent=title;
-  const ul=document.createElement("ul"); ul.className="rowscroll"; ps.forEach(p=>ul.appendChild(card(p)));
-  sec.append(h,ul); return sec;
-}
-function home(){
-  const el=$("home"); el.innerHTML="";
-  PORTADA.forEach(([t,e])=>{ const s=strip(t,e); if(s) el.appendChild(s) });
-  const sec=document.createElement("section"); sec.className="sec";
-  const h=document.createElement("h2"); h.textContent="Rubros";
-  const g=document.createElement("div"); g.className="tiles";
-  const counts=R.map(()=>0); P.forEach(p=>counts[p[2]]++);
-  R.map((r,i)=>[r,i]).sort((a,b)=>counts[b[1]]-counts[a[1]]).forEach(([r,i])=>{
-    const b=document.createElement("button"); b.className="tile"; b.innerHTML="<i></i><span></span>"; b.firstChild.textContent=ICON[r]||"🛒"; b.lastChild.textContent=r;
-    b.onclick=()=>{rubro=i;shown=PAGE;chips();render();window.scrollTo(0,0)}; g.appendChild(b);
-  });
-  sec.append(h,g); el.appendChild(sec);
-}
 function row(p, inCart){
   const li=document.createElement("li"); li.className="item";
   const left=document.createElement("div"); left.style.minWidth="0";
@@ -332,17 +263,13 @@ function row(p, inCart){
   const pr=document.createElement("div"); pr.className="price"; pr.textContent=fmt(p[3]);
   right.append(pr, qtyCtl(p[0]));
   const th=thumb(p); th.onclick=()=>openZoom(p); n.onclick=()=>openZoom(p);
-  if(inCart){ const ni=document.createElement("input"); ni.className="note"; ni.id="nota-"+p[0]; ni.placeholder="Nota para este producto"; ni.value=notes.get(p[0])||""; ni.oninput=()=>{ const v=ni.value.trim(); if(v) notes.set(p[0],v); else notes.delete(p[0]); saveNotes() }; left.appendChild(ni) }
   li.prepend(th); li.append(left,right); return li;
 }
 function render(){
   filter(); imgQueue=[];
   const list=$("list"); list.innerHTML="";
-  const isHome = !query.trim() && rubro<0;
-  $("home").hidden=!isHome; list.hidden=isHome; $("count").hidden=isHome;
-  if(isHome){ home(); $("more").hidden=true; bar(); return }
   const frag=document.createDocumentFragment();
-  results.slice(0,shown).forEach(p=>frag.appendChild(card(p)));
+  results.slice(0,shown).forEach(p=>frag.appendChild(row(p,false)));
   list.appendChild(frag);
   $("count").textContent = results.length.toLocaleString("es-AR")+" productos"+(rubro>=0?" en "+R[rubro]:"")+(query?" para “"+query+"”":"");
   $("more").hidden = results.length<=shown;
@@ -373,8 +300,6 @@ function setQ(e,q){
 function renderCart(){
   const ul=$("cartlist"); ul.innerHTML="";
   cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) ul.appendChild(row(p,true)) });
-  const fg=$("forgot"); fg.innerHTML=""; const sug=OLVIDO.filter(e=>!cart.has(e)&&byEan.has(e)).slice(0,6);
-  if(sug.length){ const h=document.createElement("h3"); h.textContent="¿Te olvidaste de algo?"; const u=document.createElement("ul"); u.className="rowscroll"; sug.forEach(e=>u.appendChild(card(byEan.get(e)))); fg.append(h,u) }
   const t=totals();
   if(!t.n){ closeSheet(); return }
   $("totals").innerHTML = `<div><span>Productos</span><span>${fmt(t.sub)}</span></div><div><span>Envío</span><span>${t.envio?fmt(t.envio):"Gratis"}</span></div><div class="grand"><span>Total</span><span>${fmt(t.total)}</span></div>`;
@@ -385,7 +310,7 @@ function closeSheet(){ $("sheet").hidden=true; document.body.style.overflow="" }
 function buildMsg(){
   const t=totals(), v=id=>$(id).value.trim(), pago=document.querySelector('input[name="pago"]:checked').value;
   let s="*Pedido Súper El Tío*\n\n";
-  cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${q} x ${nice(p[1])} = ${fmt(q*p[3])}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"") });
+  cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${q} x ${nice(p[1])} = ${fmt(q*p[3])}\n` });
   s+=`\nProductos: ${fmt(t.sub)}\nEnvío: ${t.envio?fmt(t.envio):"Gratis"}\n*Total: ${fmt(t.total)}*\n\n`;
   s+=`Nombre: ${v("f-nombre")}\nTeléfono: ${v("f-tel")}\nDirección: ${v("f-dir")}${v("f-entre")?" ("+v("f-entre")+")":""}\nTurno: ${$("f-turno").value}\nPago: ${pago}${pago==="Efectivo"&&v("f-vuelto")?" (paga con $"+v("f-vuelto")+")":""}\nReemplazos: ${$("f-reemp").checked?"Consultarme antes":"No reemplazar"}`;
   if(v("f-notas")) s+=`\nNotas: ${v("f-notas")}`;

@@ -41,9 +41,20 @@ h1 span{color:var(--brand)}
 .pill b{color:var(--ink)}
 .count{font-size:.85rem;color:var(--muted);margin-block:4px 8px}
 ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
-.thumb{width:56px;height:56px;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;font-family:var(--font-display);font-weight:800;font-size:1.3rem;color:var(--muted)}
+.item{display:grid;grid-template-columns:84px 1fr auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.thumb{width:84px;height:84px;cursor:zoom-in;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;font-family:var(--font-display);font-weight:800;font-size:1.3rem;color:var(--muted)}
 .thumb img{width:100%;height:100%;object-fit:contain;background:#fff}
+.item .name{cursor:pointer}
+@media (max-width:360px){.item{grid-template-columns:64px 1fr auto}.thumb{width:64px;height:64px}}
+#zoom{z-index:11}
+.zbox{display:grid;gap:12px}
+.zimg{width:100%;max-width:420px;margin:0 auto;aspect-ratio:1;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;font-family:var(--font-display);font-weight:800;font-size:4rem;color:#9aa59c}
+.zimg img{width:100%;height:100%;object-fit:contain}
+.zname{font-family:var(--font-display);font-weight:800;font-size:1.25rem;margin:0;text-wrap:balance}
+.zrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.zrow .price{font-size:1.4rem}
+.zrow .add,.zrow .qty button{font-size:1rem}
+.zrow .add{padding:10px 22px}
 .item .name{font-weight:600;min-width:0;overflow-wrap:anywhere}
 .item .meta{font-size:.75rem;color:var(--muted);margin-top:2px}
 .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
@@ -116,6 +127,17 @@ fieldset input{width:auto}
     <div class="progress" aria-hidden="true"><i id="prog"></i></div>
     <div class="hint" id="hint"></div>
     <button class="cta" id="open" disabled><span id="ccount">Carrito vacío</span><span id="ctotal">$0</span></button>
+  </div>
+</div>
+
+<div class="sheet" id="zoom" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="zname">
+    <div class="phead"><span class="meta" id="zrubro"></span><button class="x" id="zclose">Cerrar</button></div>
+    <div class="zbox">
+      <div class="zimg" id="zimg"></div>
+      <h2 class="zname" id="zname"></h2>
+      <div class="zrow"><div class="price" id="zprice"></div><div id="zqty"></div></div>
+    </div>
   </div>
 </div>
 
@@ -217,6 +239,17 @@ function thumb(p){
   else if(ean.length>=8 && imgObs) imgObs.observe(box);
   return box;
 }
+const big=u=>u.replace(/\.(100|200)\.jpg$/,".400.jpg");
+let zcur=null;
+function openZoom(p){
+  zcur=p; $("zname").textContent=nice(p[1]); $("zrubro").textContent=R[p[2]]; $("zprice").textContent=fmt(p[3]);
+  const z=$("zimg"); z.textContent=(p[1].match(/[A-ZÁÉÍÓÚÑ0-9]/)||["·"])[0];
+  const u=LOCAL_IMG.has(p[0])?"fotos/"+p[0]+".jpg":(IMG.get(p[0])?big(IMG.get(p[0])):"");
+  if(u){ const im=new Image(); im.alt=nice(p[1]); im.onload=()=>{ z.textContent=""; z.appendChild(im) }; im.onerror=()=>{ if(IMG.get(p[0])&&im.src.indexOf(".400.")>0) im.src=IMG.get(p[0]) }; im.src=u }
+  zqty(); $("zoom").hidden=false; document.body.style.overflow="hidden";
+}
+function zqty(){ const q=$("zqty"); q.innerHTML=""; q.appendChild(qtyCtl(zcur[0])) }
+function closeZoom(){ $("zoom").hidden=true; zcur=null; if($("sheet").hidden) document.body.style.overflow="" }
 function row(p, inCart){
   const li=document.createElement("li"); li.className="item";
   const left=document.createElement("div"); left.style.minWidth="0";
@@ -228,7 +261,8 @@ function row(p, inCart){
   const right=document.createElement("div"); right.className="right";
   const pr=document.createElement("div"); pr.className="price"; pr.textContent=fmt(p[3]);
   right.append(pr, qtyCtl(p[0]));
-  li.prepend(thumb(p)); li.append(left,right); return li;
+  const th=thumb(p); th.onclick=()=>openZoom(p); n.onclick=()=>openZoom(p);
+  li.prepend(th); li.append(left,right); return li;
 }
 function render(){
   filter(); imgQueue=[];
@@ -260,7 +294,7 @@ function bar(){
 function setQ(e,q){
   if(q<=0) cart.delete(e); else cart.set(e,q);
   try{ localStorage.setItem("eltio-cart", JSON.stringify([...cart])) }catch(err){}
-  render(); if(!$("sheet").hidden) renderCart();
+  render(); if(!$("sheet").hidden) renderCart(); if(zcur) zqty();
 }
 function renderCart(){
   const ul=$("cartlist"); ul.innerHTML="";
@@ -285,7 +319,9 @@ $("q").addEventListener("input",e=>{query=e.target.value;shown=PAGE;render()});
 $("more").onclick=()=>{shown+=PAGE;render()};
 $("open").onclick=openSheet; $("close").onclick=closeSheet;
 $("sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet() });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("sheet").hidden) closeSheet() });
+document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return; if(!$("zoom").hidden) closeZoom(); else if(!$("sheet").hidden) closeSheet() });
+$("zclose").onclick=closeZoom;
+$("zoom").addEventListener("click",e=>{ if(e.target.id==="zoom") closeZoom() });
 document.querySelectorAll('input[name="pago"]').forEach(r=>r.onchange=()=>{ $("vueltobox").hidden = !$("p-ef").checked });
 $("form").addEventListener("submit",e=>{
   e.preventDefault();

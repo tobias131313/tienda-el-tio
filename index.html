@@ -212,6 +212,12 @@ fieldset input{width:auto}
 const WHATSAPP = "5491128656389"; // WhatsApp del súper: 11 2865-6389
 const MIN = 25000, ENVIO = 2000, GRATIS = 50000, PAGE = 60;
 let R = [], P = [], IDX = [], byEan = new Map(), LOCAL_IMG = new Set();
+// Productos por peso: p[4] = gramos por cada toque del +. El precio de lista es por kg.
+const stepOf = p => p[4]||0;
+const fmtW = g => g>=1000 ? (g/1000).toLocaleString("es-AR")+" kg" : g+" g";
+const qLabel = (p,q) => stepOf(p) ? fmtW(q*stepOf(p)) : String(q);
+const lineTotal = (p,q) => stepOf(p) ? Math.round(q*stepOf(p)/1000*p[3]) : q*p[3];
+const priceLabel = p => fmt(p[3]) + (stepOf(p) ? " /kg" : "");
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 const nice = s => s.toLowerCase().replace(/(^|[\s(/.-])([a-záéíóúñü])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(\d+)\s?(Gr|Grs|Kg|Ml|Lt|Cc|Un|Cm)\b/gi,(m,a,b)=>a+" "+b.toLowerCase()).replace(/\bX\b/g,"x");
@@ -240,7 +246,7 @@ function qtyCtl(e){
   if(!q){ const b=document.createElement("button"); b.className="add"; b.textContent="Agregar"; b.onclick=()=>setQ(e,1); wrap.appendChild(b); return wrap }
   wrap.className="qty";
   const m=document.createElement("button"); m.textContent="−"; m.setAttribute("aria-label","Quitar uno"); m.onclick=()=>setQ(e,q-1);
-  const s=document.createElement("span"); s.textContent=q;
+  const s=document.createElement("span"); s.textContent=qLabel(byEan.get(e),q);
   const p=document.createElement("button"); p.textContent="+"; p.setAttribute("aria-label","Agregar uno"); p.onclick=()=>setQ(e,q+1);
   wrap.append(m,s,p); return wrap;
 }
@@ -269,7 +275,7 @@ function thumb(p){
 const big=u=>u.replace(/\.(100|200)\.jpg$/,".400.jpg");
 let zcur=null;
 function openZoom(p){
-  zcur=p; $("zname").textContent=nice(p[1]); $("zrubro").textContent=R[p[2]]; $("zprice").textContent=fmt(p[3]);
+  zcur=p; $("zname").textContent=nice(p[1]); $("zrubro").textContent=R[p[2]]; $("zprice").textContent=priceLabel(p);
   const z=$("zimg"); z.textContent=(p[1].match(/[A-ZÁÉÍÓÚÑ0-9]/)||["·"])[0];
   const u=LOCAL_IMG.has(p[0])?"fotos/"+p[0]+".jpg":(IMG.get(p[0])?big(IMG.get(p[0])):"");
   if(u){ const im=new Image(); im.alt=nice(p[1]); im.onload=()=>{ z.textContent=""; z.appendChild(im) }; im.onerror=()=>{ if(IMG.get(p[0])&&im.src.indexOf(".400.")>0) im.src=IMG.get(p[0]) }; im.src=u }
@@ -296,7 +302,7 @@ function ctl(e){
 function card(p){
   const li=document.createElement("li"), c=document.createElement("div"); c.className="card";
   const ph=thumb(p); ph.className="ph"; ph.onclick=()=>openZoom(p); ph.appendChild(ctl(p[0]));
-  const pr=document.createElement("div"); pr.className="price"; pr.textContent=fmt(p[3]);
+  const pr=document.createElement("div"); pr.className="price"; pr.textContent=priceLabel(p);
   const n=document.createElement("div"); n.className="cname"; n.textContent=nice(p[1]); n.onclick=()=>openZoom(p);
   c.append(ph,pr,n); li.appendChild(c); return li;
 }
@@ -326,10 +332,10 @@ function row(p, inCart){
   const n=document.createElement("div"); n.className="name"; n.textContent=nice(p[1]);
   const m=document.createElement("div"); m.className="meta";
   const q=cart.get(p[0])||0;
-  m.textContent = inCart ? (q+" × "+fmt(p[3])+" = "+fmt(q*p[3])) : R[p[2]];
+  m.textContent = inCart ? (stepOf(p) ? qLabel(p,q)+" × "+priceLabel(p)+" = "+fmt(lineTotal(p,q))+" aprox." : q+" × "+fmt(p[3])+" = "+fmt(q*p[3])) : R[p[2]];
   left.append(n,m);
   const right=document.createElement("div"); right.className="right";
-  const pr=document.createElement("div"); pr.className="price"; pr.textContent=fmt(p[3]);
+  const pr=document.createElement("div"); pr.className="price"; pr.textContent=priceLabel(p);
   right.append(pr, qtyCtl(p[0]));
   const th=thumb(p); th.onclick=()=>openZoom(p); n.onclick=()=>openZoom(p);
   if(inCart){ const ni=document.createElement("input"); ni.className="note"; ni.id="nota-"+p[0]; ni.placeholder="Nota para este producto"; ni.value=notes.get(p[0])||""; ni.oninput=()=>{ const v=ni.value.trim(); if(v) notes.set(p[0],v); else notes.delete(p[0]); saveNotes() }; left.appendChild(ni) }
@@ -344,13 +350,13 @@ function render(){
   const frag=document.createDocumentFragment();
   results.slice(0,shown).forEach(p=>frag.appendChild(card(p)));
   list.appendChild(frag);
-  $("count").textContent = results.length.toLocaleString("es-AR")+" productos"+(rubro>=0?" en "+R[rubro]:"")+(query?" para “"+query+"”":"");
+  $("count").textContent = results.length.toLocaleString("es-AR")+(results.length===1?" producto":" productos")+(rubro>=0?" en "+R[rubro]:"")+(query?" para “"+query+"”":"");
   $("more").hidden = results.length<=shown;
   if(!results.length) list.innerHTML='<li class="empty">No encontramos ese producto. Probá con otra palabra o con la marca.</li>';
   bar();
 }
 function totals(){
-  let sub=0,n=0; cart.forEach((q,e)=>{ const p=byEan.get(e); if(p){sub+=q*p[3]; n+=q} });
+  let sub=0,n=0; cart.forEach((q,e)=>{ const p=byEan.get(e); if(p){sub+=lineTotal(p,q); n+=stepOf(p)?1:q} });
   const envio = sub>=GRATIS||sub===0 ? 0 : ENVIO;
   return {sub,n,envio,total:sub+envio};
 }
@@ -385,7 +391,7 @@ function closeSheet(){ $("sheet").hidden=true; document.body.style.overflow="" }
 function buildMsg(){
   const t=totals(), v=id=>$(id).value.trim(), pago=document.querySelector('input[name="pago"]:checked').value;
   let s="*Pedido Súper El Tío*\n\n";
-  cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${q} x ${nice(p[1])} = ${fmt(q*p[3])}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"") });
+  cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${qLabel(p,q)} x ${nice(p[1])} = ${fmt(lineTotal(p,q))}${stepOf(p)?" (aprox., se cobra el peso real)":""}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"") });
   s+=`\nProductos: ${fmt(t.sub)}\nEnvío: ${t.envio?fmt(t.envio):"Gratis"}\n*Total: ${fmt(t.total)}*\n\n`;
   s+=`Nombre: ${v("f-nombre")}\nTeléfono: ${v("f-tel")}\nDirección: ${v("f-dir")}${v("f-entre")?" ("+v("f-entre")+")":""}\nTurno: ${$("f-turno").value}\nPago: ${pago}${pago==="Efectivo"&&v("f-vuelto")?" (paga con $"+v("f-vuelto")+")":""}\nReemplazos: ${$("f-reemp").checked?"Consultarme antes":"No reemplazar"}`;
   if(v("f-notas")) s+=`\nNotas: ${v("f-notas")}`;

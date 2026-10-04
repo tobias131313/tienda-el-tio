@@ -2,9 +2,12 @@
 
 Corre en GitHub Actions (workflow "Bajar fotos"). Solo baja las que faltan: una foto que ya
 está en fotos/ (por ejemplo, una sacada en el local) nunca se pisa.
-Formato de fotos_urls.json: {"<EAN>": {"url": "...", "src": "carrefour|jumbo|dia"}}.
+Formato de fotos_urls.json: {"<EAN>": [["carrefour|jumbo|dia", "url"], ...]} en orden de preferencia.
+Si una tienda devuelve el cartel de "imagen no disponible", se prueba la siguiente; esos carteles
+quedan anotados en herramientas/fotos_vacias.txt.
 """
-import io, json, os, re, sys, time, urllib.request
+import hashlib, io, json, os, re, time, urllib.request
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from PIL import Image
 
@@ -37,35 +40,61 @@ def cuadrada(datos):
     lienzo.save(out, "JPEG", quality=78, optimize=True, progressive=True)
     return out.getvalue()
 
-def una(item):
-    ean, url = item
-    datos = bajar(url)
-    if not datos:
-        return ean, False
-    try:
-        with open(os.path.join("fotos", ean + ".jpg"), "wb") as f:
-            f.write(cuadrada(datos))
-        return ean, True
-    except Exception:
-        return ean, False
+def md5(b):
+    return hashlib.md5(b).hexdigest()
 
 def main():
     urls = json.load(open("herramientas/fotos_urls.json", encoding="utf-8"))
-    faltan = [(e, v["url"]) for e, v in urls.items() if not os.path.exists(os.path.join("fotos", e + ".jpg"))]
+    ruta_vacias = "herramientas/fotos_vacias.txt"
+    vacias = set(open(ruta_vacias).read().split()) if os.path.exists(ruta_vacias) else set()
+    # Borra fotos que resultaron ser carteles de "imagen no disponible".
+    for n in os.listdir("fotos"):
+        if n.endswith(".jpg") and md5(open(os.path.join("fotos", n), "rb").read()) in vacias:
+            os.remove(os.path.join("fotos", n))
+
+    def probar(item):
+        ean, candidatas = item
+        for _, url in candidatas:
+            datos = bajar(url)
+            if not datos:
+                continue
+            try:
+                jpg = cuadrada(datos)
+            except Exception:
+                continue
+            if md5(jpg) not in vacias:
+                return ean, jpg
+        return ean, None
+
+    faltan = {e: c for e, c in urls.items() if not os.path.exists(os.path.join("fotos", e + ".jpg"))}
     print(f"{len(urls)} con link, {len(faltan)} por bajar")
-    malas = []
-    with ThreadPoolExecutor(8) as ex:
-        for ean, ok in ex.map(una, faltan):
-            if not ok:
-                malas.append(ean)
-    print(f"bajadas {len(faltan) - len(malas)}, fallaron {len(malas)}: {' '.join(malas[:50])}")
+    while faltan:
+        bajadas = {}
+        with ThreadPoolExecutor(8) as ex:
+            for ean, jpg in ex.map(probar, faltan.items()):
+                if jpg:
+                    bajadas[ean] = jpg
+        # La misma imagen en 3 o más productos distintos es un cartel de "sin imagen": se descarta y se prueba otra tienda.
+        repetidas = Counter(md5(j) for j in bajadas.values())
+        nuevas = {h for h, n in repetidas.items() if n >= 3}
+        for ean, jpg in bajadas.items():
+            if md5(jpg) not in nuevas:
+                with open(os.path.join("fotos", ean + ".jpg"), "wb") as f:
+                    f.write(jpg)
+        print(f"bajadas {len(bajadas)}, carteles nuevos de sin imagen: {len(nuevas)}")
+        if not nuevas:
+            break
+        vacias |= nuevas
+        faltan = {e: c for e, c in faltan.items() if e in bajadas and md5(bajadas[e]) in nuevas}
+    with open(ruta_vacias, "w") as f:
+        f.write("\n".join(sorted(vacias)) + "\n")
 
     datos = json.load(open("productos.json", encoding="utf-8"))
     hay = {n[:-4] for n in os.listdir("fotos") if n.endswith(".jpg")}
     datos["f"] = sorted(p[0] for p in datos["p"] if p[0] in hay)
     with open("productos.json", "w", encoding="utf-8") as f:
         json.dump(datos, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"productos con foto propia: {len(datos['f'])} de {len(datos['p'])}")
+    print(f"productos con foto: {len(datos['f'])} de {len(datos['p'])}")
 
 if __name__ == "__main__":
     main()

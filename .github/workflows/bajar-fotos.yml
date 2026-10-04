@@ -21,6 +21,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
-          git add fotos productos.json
+          git add fotos productos.json herramientas/fotos_vacias.txt
           git diff --cached --quiet || git commit -q -m "Fotos de productos bajadas por código de barras"
           git push

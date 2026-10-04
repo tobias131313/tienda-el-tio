@@ -1,7 +1,7 @@
 name: Sondeo Maxiconsumo
 on:
   push:
-    paths: [".github/workflows/sondeo.yml"]
+    paths: [".github/workflows/sondeo.yml", "herramientas/maxi_listar.py"]
 permissions:
   contents: write
 jobs:

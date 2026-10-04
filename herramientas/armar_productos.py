@@ -12,6 +12,7 @@ Uso:
 import csv
 import json
 import math
+import os
 import sys
 
 import pandas as pd
@@ -56,8 +57,12 @@ def main(lista, maestro_path, salida):
         if p[5] >= 0:
             p[5] = subs_ordenadas.index(subs[p[5]])
     productos.sort(key=lambda p: p[1].lower())
+    # "f": productos con foto en fotos/<EAN>.jpg (carpeta al lado de productos.json).
+    carpeta = os.path.join(os.path.dirname(os.path.abspath(salida)), "fotos")
+    hay = {n[:-4] for n in os.listdir(carpeta) if n.endswith(".jpg")} if os.path.isdir(carpeta) else set()
+    con_foto = sorted(p[0] for p in productos if p[0] in hay)
     with open(salida, "w", encoding="utf-8") as f:
-        json.dump({"r": rubros, "s": subs_ordenadas, "p": productos}, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump({"r": rubros, "s": subs_ordenadas, "p": productos, "f": con_foto}, f, ensure_ascii=False, separators=(",", ":"))
     print(f"{len(productos)} productos, {len(rubros)} rubros, {len(subs_ordenadas)} subcategorías")
 
 

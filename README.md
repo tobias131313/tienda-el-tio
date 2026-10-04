@@ -12,7 +12,8 @@ Para actualizar precios se regenera `productos.json` desde la última lista de p
 
 ## Fotos
 
-1. Fotos propias: archivo `fotos/<EAN>.jpg` y el EAN agregado a la lista `"f"` de `productos.json`. Tienen prioridad.
+1. Fotos guardadas: archivo `fotos/<EAN>.jpg` y el EAN agregado a la lista `"f"` de `productos.json`. Tienen prioridad.
+   La mayoría salen de las tiendas online de Carrefour, Jumbo y Día buscando por código de barras. Los links quedan en `herramientas/fotos_urls.json` y el workflow "Bajar fotos" (`herramientas/bajar_fotos.py`) las baja cuando ese archivo cambia: cuadradas de 400 px, fondo blanco, sin la franja de color de e-commerce y salteando los carteles de "imagen no disponible". Nunca pisa una foto que ya está.
 2. Si no hay foto propia, la página busca la foto por código de barras en Open Food Facts (base libre).
 3. Si no hay ninguna, se muestra la inicial del producto.
 

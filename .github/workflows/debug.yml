@@ -1,0 +1,19 @@
+name: Debug
+on:
+  push:
+    paths: [".github/workflows/debug.yml"]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p herramientas/tmp
+          curl -sL -o herramientas/tmp/a.jpg "https://carrefourar.vteximg.com.br/arquivos/ids/332148-400-400/x.jpg"
+          curl -sL -o herramientas/tmp/a_full.jpg "https://carrefourar.vteximg.com.br/arquivos/ids/332148/x.jpg"
+          file herramientas/tmp/*
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add herramientas/tmp && git commit -q -m "debug (temporal)" && git push

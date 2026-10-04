@@ -1,0 +1,43 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Prueba de fotos</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#f2f4f8;color:#141c2e}
+h1{font-size:1.3rem;margin:0 0 6px}
+#res{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.c{background:#fff;border:1px solid #d9dfea;border-radius:10px;padding:8px;font-size:.75rem}
+.c .im{aspect-ratio:1;display:grid;place-items:center;background:#f4f6fa;border-radius:6px;overflow:hidden}
+.c img{width:100%;height:100%;object-fit:contain;background:#fff}
+.src{font-weight:700;color:#00337f}
+table{border-collapse:collapse;background:#fff;margin-top:10px}td,th{border:1px solid #d9dfea;padding:6px 10px;font-size:.85rem}
+</style></head><body>
+<h1>Prueba de fotos por código de barras</h1>
+<p>Esta página prueba desde tu celular o PC qué supermercados dejan sacar fotos. Esperá a que termine y mandale una captura a Claude.</p>
+<table><thead><tr><th>Fuente</th><th>Respondió</th><th>Con foto</th></tr></thead><tbody id="t"></tbody></table>
+<p id="st">Probando…</p>
+<div id="res"></div>
+<script>
+const P=[["7790895000997", "Gaseosa Coca-Cola Sabor Original 2,25 L"], ["7790742348302", "Leche Entera La Serenísima 3% 1 L"], ["7793704000928", "Yerba Mate Playadito Clásica 1 kg"], ["7790070012050", "Aceite de Girasol Cocinero 900 ml"], ["7792540000017", "Azúcar Ledesma 1 kg"], ["7792180139320", "Harina 000 Cañuelas 1 kg"], ["7790070320308", "Fideos Favorita 500 g"], ["7790070106254", "Arroz Doble Gallo 500 g"], ["7798094229881", "Pan Lactal Nevares 500 g"], ["7790742387806", "Dulce de Leche La Serenísima 400 g"], ["7790990001073", "Jabón Líquido Zorro 3 L"], ["7793253000974", "Lavandina en Gel Ayudín 700 ml"], ["7790290101602", "Fernet Branca 750 ml"], ["7792798012923", "Cerveza Quilmes 473 ml"], ["7790130003035", "Chimichurri Menoyo 23 g"], ["7793704000911", "Yerba Mate Playadito 500 g"], ["7790742345806", "Manteca La Serenísima Mult 200 g"], ["7795184119770", "Mermelada de Naranja Noel 454 g"], ["7790550022210", "Café Cabrales 125 g"], ["7793890262131", "Pan Lactal Bimbo 580 g"], ["7790990000601", "Suavizante Suave 900 ml"], ["7791290794115", "Detergente Cif Bioactive Lima 500 ml"], ["7798347070093", "Salchichas Maneca x 6 u"], ["7790199000013", "Harina 000 Morixe 1 kg"], ["7798428130159", "Aceite Paisano 900 ml"], ["7790036567440", "Puré de Tomate De la Huerta 530 g"], ["7798099030048", "Tapas de Empanadas Caserita x 12 u"], ["714604035107", "Azúcar Imperial 1 kg"], ["7795735000328", "Bizcochos Don Satur 200 g"], ["7622201745738", "Jugo en Polvo Tang Pera 15 g"], ["7793940305009", "Leche Armonía 1 L"], ["7798113300010", "Gaseosa Manaos 2,25 L"], ["7790742348005", "Leche Descremada La Serenísima Sachet 1 L"], ["7798099030055", "Tapas de Pascualina Caserita"], ["7790813110401", "Levadura Calsa 50 g"], ["7793344904143", "Papel Higiénico Elegante Blanco 4 x 30 m"], ["7795735000335", "Bizcochos Agridulces Don Satur 200 g"], ["7798031150964", "Fideos Largo Sol Pampeano 500 g"], ["7798113300027", "Gaseosa Manaos Lima Limón 2,25 L"], ["7792540260138", "Azúcar Ledesma 1 kg"], ["7798141972371", "La Providencia Tripack"], ["7798113301611", "Agua Villamanaos 2,25 L"], ["7791866001203", "Mayonesa Natura x 250"], ["7791120031557", "Arroz Largo Fino Ala 1 kg"], ["7790360720115", "Picadillo Swift 90 g"], ["7797470000854", "Durazno Marolio 820 g"], ["7792798014835", "Cerveza Quilmes Clásica 710 ml"], ["7798031151862", "Fideos Sol Pampeano 500 g"], ["7798033620137", "Dulce de Leche Tanto 400 g"], ["7798031150988", "Fideos Moños Sol Pampeano 500 g"], ["7793344904228", "Papel Higiénico Elegante Max Blanco 4 x 80 m"], ["7797470199121", "Puré Marolio 520 g"], ["7798113300041", "Gaseosa Manaos Naranja 2,25 L"], ["7798113301529", "Soda Manaos 2 L"], ["7790895000218", "Gaseosa Coca-Cola Sabor Original Retornable 2 L"], ["7790387015324", "Yerba Mate Mañanita 4 Flex 500 g"], ["7790787002535", "Leche Descremada Ilolay 1 L"], ["7790790019063", "Puré de Tomate Inca 520 g"], ["7622201735340", "Jugo en Polvo Tang Naranja Dulce 15 g"], ["7791337010215", "Yogur La Serenísima N/Activa Frutilla 900"], ["7798338291643", "Leche Chocolatada Las Tres Niñas 500 ml"], ["7790360720382", "Paté de Foie Swift 90 g"], ["7798141972388", "La Providencia x 5 u"], ["7798099032257", "Tapas de Empanadas Caserita x 18 u"], ["7791813777007", "Gaseosa Seven Up 2 L"], ["7790742222909", "Queso La Serenísima 35 g"], ["7790670052364", "Salchichas Patyviene Fun Sal x 6 u"], ["7793650000034", "Arroz Largo Fino Carogran 1 kg"], ["7798001880464", "Grasa Vacuna Esani 500 g"], ["7798113301024", "Gaseosa Manaos Pomelo Blanco 2,25 L"], ["7790040143227", "Galletitas Chocolinas Original 170 g"], ["7797470199343", "Fideos Tallarín Marolio 500 g"], ["7791828000046", "Papel Higiénico Felpita 4 x 30 m"], ["7798138648746", "Prepizza de Tomate"], ["7798138554603", "Puré de Tomate Molto 520 g"], ["7798184320016", "Polenta Más Vida 500 g"], ["7790077000753", "Magdalenas Pozo 220 g"], ["7794520869317", "Papas Krachitos 275 g"], ["7790250056881", "Rollos Sussex /C 3 x 50 m"], ["7798036830151", "Galletitas Celosas Bananita Chocolate 350 g"]];
+const SRC=[["Carrefour","https://www.carrefour.com.ar"],["Día","https://diaonline.supermercadosdia.com.ar"],["Jumbo","https://www.jumbo.com.ar"],["Vea","https://www.vea.com.ar"],["Más Online","https://www.masonline.com.ar"]];
+const stat=SRC.map(()=>({ok:0,img:0,fail:0}));
+function table(){document.getElementById("t").innerHTML=SRC.map((s,i)=>`<tr><td>${s[0]}</td><td>${stat[i].ok} de ${stat[i].ok+stat[i].fail}</td><td>${stat[i].img}</td></tr>`).join("")}
+async function look(i,ean){
+  try{const r=await fetch(SRC[i][1]+"/api/catalog_system/pub/products/search?fq=alternateIds_Ean:"+ean);
+    if(!r.ok) throw 0; const j=await r.json(); stat[i].ok++;
+    const u=j&&j[0]&&j[0].items&&j[0].items[0]&&j[0].items[0].images&&j[0].items[0].images[0]&&j[0].items[0].images[0].imageUrl;
+    if(u){stat[i].img++; return u} }catch(e){stat[i].fail++}
+  return null;
+}
+(async()=>{
+  const res=document.getElementById("res"); let found=0;
+  for(const [ean,name] of P){
+    let got=null,src="";
+    for(let i=0;i<SRC.length;i++){ const u=await look(i,ean); if(u&&!got){got=u;src=SRC[i][0]} }
+    table();
+    const c=document.createElement("div"); c.className="c";
+    c.innerHTML=`<div class="im">${got?`<img src="${got}" alt="">`:"sin foto"}</div><div>${name}</div><div class="src">${src||"-"}</div>`;
+    res.appendChild(c); if(got) found++;
+    document.getElementById("st").textContent=`Probados ${res.children.length} de ${P.length}, con foto ${found}`;
+  }
+  document.getElementById("st").textContent+=" · Terminado";
+})();
+</script></body></html>

@@ -10,14 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          mkdir -p herramientas/tmp
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
-          B=https://www.maxiconsumo.com/sucursal_moreno
-          curl -sL -A "$UA" -o herramientas/tmp/prod.html -w "prod %{http_code}\n" "$B/aceite-marolio-girasol-900-cc-328.html"
-          curl -sL -A "$UA" -o herramientas/tmp/ean.html -w "ean %{http_code}\n" "$B/catalogsearch/result/?q=7797470005279"
-          curl -sL -A "$UA" -o herramientas/tmp/marca.html -w "marca %{http_code}\n" "$B/catalogsearch/result/?q=marolio&product_list_limit=96"
-          curl -sL -A "$UA" -o herramientas/tmp/full.jpg -w "full %{http_code}\n" "https://www.maxiconsumo.com/media/catalog/product/3/2/328_174244293867db91ba60f9b1.81183213.jpg"
-          ls -la herramientas/tmp
+          python herramientas/maxi_listar.py marolio molto esencial
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
-          git add herramientas/tmp && git commit -q -m "sondeo (temporal)" && git push
+          git add herramientas/maxi_productos.json && git commit -q -m "sondeo (temporal)" && git push

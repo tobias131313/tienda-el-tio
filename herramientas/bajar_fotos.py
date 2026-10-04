@@ -24,6 +24,28 @@ def bajar(url):
             time.sleep(2 * (intento + 1))
     return None
 
+def quitar_franja(im):
+    """Recorta la franja de color con nombre y tamaño que traen a la derecha las fotos de e-commerce."""
+    g = im.convert("L"); w, h = g.size; px = g.load()
+    filas = range(0, h, max(1, h // 200))
+    col = [sum(1 for y in filas if px[x, y] < 235) / len(filas) for x in range(w)]
+    x = w - 1
+    while x > w * 0.8 and col[x] < 0.5:
+        x -= 1
+    if col[x] < 0.5:
+        return im
+    fin = x
+    while x > 0 and col[x] >= 0.5:
+        x -= 1
+    if not (w * 0.08 <= fin - x <= w * 0.32):
+        return im
+    hueco = x
+    while x > 0 and col[x] < 0.25:
+        x -= 1
+    if hueco - x < w * 0.015 or x < w * 0.3:
+        return im
+    return im.crop((0, 0, x + max(2, w // 100), h))
+
 def cuadrada(datos):
     im = Image.open(io.BytesIO(datos))
     if im.mode in ("RGBA", "LA", "P"):
@@ -31,7 +53,7 @@ def cuadrada(datos):
         fondo = Image.new("RGBA", im.size, (255, 255, 255, 255))
         fondo.alpha_composite(im)
         im = fondo
-    im = im.convert("RGB")
+    im = quitar_franja(im.convert("RGB"))
     util = int(LADO * 0.94)
     im.thumbnail((util, util), Image.LANCZOS)
     lienzo = Image.new("RGB", (LADO, LADO), (255, 255, 255))

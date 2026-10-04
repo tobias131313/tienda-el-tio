@@ -1,0 +1,21 @@
+name: Sondeo Maxiconsumo
+on:
+  push:
+    paths: [".github/workflows/sondeo.yml"]
+permissions:
+  contents: write
+jobs:
+  s:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p herramientas/tmp
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
+          curl -sL -A "$UA" -o herramientas/tmp/home.html -w "home %{http_code} %{url_effective}\n" https://maxiconsumo.com/
+          curl -sL -A "$UA" -o herramientas/tmp/ean.html -w "ean %{http_code} %{url_effective}\n" "https://maxiconsumo.com/sucursal_capital/catalogsearch/result/?q=7797470005279"
+          curl -sL -A "$UA" -o herramientas/tmp/nombre.html -w "nombre %{http_code} %{url_effective}\n" "https://maxiconsumo.com/sucursal_capital/catalogsearch/result/?q=aceite+marolio"
+          ls -la herramientas/tmp
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add herramientas/tmp && git commit -q -m "sondeo (temporal)" && git push

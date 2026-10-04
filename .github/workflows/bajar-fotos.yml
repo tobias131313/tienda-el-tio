@@ -1,7 +1,7 @@
 name: Bajar fotos
 on:
   push:
-    paths: ["herramientas/fotos_urls.json"]
+    paths: ["herramientas/fotos_urls.json", "herramientas/bajar_fotos.py"]
   workflow_dispatch:
 permissions:
   contents: write

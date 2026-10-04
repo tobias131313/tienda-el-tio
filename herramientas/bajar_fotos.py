@@ -24,8 +24,13 @@ def bajar(url):
             time.sleep(2 * (intento + 1))
     return None
 
+def sin_bordes(im):
+    """Recorta el margen blanco alrededor del producto."""
+    caja = im.convert("L").point(lambda v: 255 if v < 235 else 0).getbbox()
+    return im.crop(caja) if caja else im
+
 def quitar_franja(im):
-    """Recorta la franja de color con nombre y tamaño que traen a la derecha las fotos de e-commerce."""
+    """Recorta la franja de color con nombre y tamaño que traen a la derecha muchas fotos de e-commerce."""
     g = im.convert("L"); w, h = g.size; px = g.load()
     filas = range(0, h, max(1, h // 200))
     col = [sum(1 for y in filas if px[x, y] < 235) / len(filas) for x in range(w)]
@@ -37,7 +42,7 @@ def quitar_franja(im):
     fin = x
     while x > 0 and col[x] >= 0.5:
         x -= 1
-    if not (w * 0.08 <= fin - x <= w * 0.32):
+    if not (h * 0.06 <= fin - x <= min(h * 0.3, w * 0.45)):
         return im
     hueco = x
     while x > 0 and col[x] < 0.25:
@@ -53,7 +58,9 @@ def cuadrada(datos):
         fondo = Image.new("RGBA", im.size, (255, 255, 255, 255))
         fondo.alpha_composite(im)
         im = fondo
-    im = quitar_franja(im.convert("RGB"))
+    im = sin_bordes(quitar_franja(sin_bordes(im.convert("RGB"))))
+    # La misma franja a veces viene abajo (nombre del sabor, "x6", "Rinde 1 L"): se gira la foto y se usa la misma regla.
+    im = sin_bordes(quitar_franja(im.rotate(90, expand=True)).rotate(-90, expand=True))
     util = int(LADO * 0.94)
     im.thumbnail((util, util), Image.LANCZOS)
     lienzo = Image.new("RGB", (LADO, LADO), (255, 255, 255))

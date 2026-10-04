@@ -10,12 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          mkdir -p herramientas/tmp; UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
-          curl -sL -A "$UA" -o herramientas/tmp/robots.txt -w "robots %{http_code}\n" https://www.maxiconsumo.com/robots.txt
-          curl -sL -A "$UA" -o herramientas/tmp/sitemap.xml -w "sitemap %{http_code}\n" https://www.maxiconsumo.com/sitemap.xml
-          curl -sL -A "$UA" -o herramientas/tmp/sitemap_moreno.xml -w "sitemap2 %{http_code}\n" https://www.maxiconsumo.com/sucursal_moreno/sitemap.xml
-          curl -sL -A "$UA" -o herramientas/tmp/almacen.html -w "almacen %{http_code}\n" "https://www.maxiconsumo.com/sucursal_moreno/almacen.html?product_list_limit=96"
-          ls -la herramientas/tmp
+          python herramientas/maxi_listar.py almacen bebidas frescos congelados limpieza perfumeria hogar-y-bazar mascotas
           git config user.name "github-actions[bot]"
           git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
-          git add herramientas/tmp && git commit -q -m "sondeo (temporal)" && git push
+          git add herramientas/maxi_productos.json && git commit -q -m "sondeo (temporal)" && git push

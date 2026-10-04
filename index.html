@@ -86,6 +86,9 @@ ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .qty span{min-width:20px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
 .more{display:block;width:100%;margin-top:12px;font:inherit;font-weight:600;padding:12px;border-radius:var(--r);border:1px dashed var(--line);background:transparent;color:var(--ink);cursor:pointer}
 .empty{padding:28px 8px;text-align:center;color:var(--muted)}
+.foot{display:grid;gap:4px;margin-top:28px;padding:16px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted);text-align:center}
+.foot b{color:var(--ink);font-family:var(--font-display);font-size:1rem}
+.foot a{color:var(--brand);font-weight:600}
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
 .bar-in{max-width:760px;margin:0 auto;display:grid;gap:8px}
 .progress{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
@@ -176,6 +179,12 @@ fieldset input{width:auto}
   <div id="home"></div>
   <ul class="grid" id="list"></ul>
   <button class="more" id="more" hidden>Ver más productos</button>
+  <footer class="foot">
+    <b>Supermercado El Tío</b>
+    <span>Hipólito Yrigoyen 2020, entre Manuel Obarrio y Aurora, Moreno</span>
+    <span>Pedidos por WhatsApp: 11 2865-6389</span>
+    <a href="https://www.google.com/maps/search/?api=1&amp;query=Hip%C3%B3lito+Yrigoyen+2020%2C+Moreno%2C+Buenos+Aires" target="_blank" rel="noopener">Ver en el mapa</a>
+  </footer>
 </div>
 
 <div class="bar">

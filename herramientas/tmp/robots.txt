@@ -1,0 +1,22 @@
+User-agent: *
+Disallow: /checkout/
+Disallow: /customer/
+Disallow: /catalogsearch/
+Disallow: /wishlist/
+Disallow: /review/
+Disallow: /sendfriend/
+Disallow: /catalog/product_compare/
+Disallow: /app/
+Disallow: /lib/
+Disallow: /pkginfo/
+Disallow: /report/
+Disallow: /var/
+# Evitar filtros duplicados tÃ­picos de Magento
+Disallow: /*?price=
+Disallow: /*?color=
+Disallow: /*?size=
+Disallow: /*?dir=
+Disallow: /*?order=
+Disallow: /*?mode=
+Allow: /
+Sitemap: https://www.maxiconsumo.com/sitemap.xml

@@ -35,12 +35,12 @@ def quitar_franja(im):
     filas = range(0, h, max(1, h // 200))
     col = [sum(1 for y in filas if px[x, y] < 235) / len(filas) for x in range(w)]
     x = w - 1
-    while x > w * 0.8 and col[x] < 0.5:
+    while x > w * 0.8 and col[x] < 0.4:
         x -= 1
-    if col[x] < 0.5:
+    if col[x] < 0.4:
         return im
     fin = x
-    while x > 0 and col[x] >= 0.5:
+    while x > 0 and col[x] >= 0.4:
         x -= 1
     if not (h * 0.06 <= fin - x <= min(h * 0.3, w * 0.45)):
         return im

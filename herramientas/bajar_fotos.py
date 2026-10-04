@@ -4,7 +4,7 @@ Corre en GitHub Actions (workflow "Bajar fotos"). Solo baja las que faltan: una 
 está en fotos/ (por ejemplo, una sacada en el local) nunca se pisa.
 Formato de fotos_urls.json: {"<EAN>": [["carrefour|jumbo|dia", "url"], ...]} en orden de preferencia.
 Si una tienda devuelve el cartel de "imagen no disponible", se prueba la siguiente; esos carteles
-quedan anotados en herramientas/fotos_vacias.txt.
+quedan anotados en herramientas/fotos_vacias.txt. También se recorta la franja de color con nombre y tamaño.
 """
 import hashlib, io, json, os, re, time, urllib.request
 from collections import Counter

@@ -22,3 +22,15 @@ Para actualizar precios se regenera `productos.json` desde la última lista de p
 ## Nombres y precios
 
 `herramientas/armar_productos.py` arma `productos.json` cruzando por EAN la lista de precios del súper (privada, no va en este repositorio) con la lista maestra de nombres y subcategorías. El precio siempre sale de la lista de precios; el nombre de la tienda, de la lista maestra. Un EAN nuevo sale con el nombre de SAG hasta que se le asigne uno.
+
+## Venta cruzada ("Va bien con")
+
+Prueba en `venta-cruzada.html` (cuando se apruebe, pasa a `index.html`). Al sumar un producto aparece abajo una fila con lo que suele ir con él, y el carrito muestra "Va bien con tu pedido".
+
+Las sugerencias salen de `sugerencias.json`:
+- `a`: aprendido de pedidos reales (`herramientas/aprender_sugerencias.py pedidos.json`). Tiene prioridad.
+- `x`: por palabra en el nombre (salchichas, carne picada, cortes para milanesa, chorizo).
+- `r`: por subcategoría (hamburguesas, carne, fideos, yerba, etc.).
+
+Para cambiar las reglas a mano: editar `REGLAS`, `ESPECIALES` y `T` en `herramientas/armar_sugerencias.py` y correrlo (opcional: pasarle el Excel de ventas de Vendita para elegir los más vendidos; ese Excel no se sube). Lo aprendido no se pisa.
+La tienda guarda en el navegador qué productos se sumaron desde una sugerencia (`eltio-sug`), para medir cuánto se usan cuando los pedidos se guarden en Firebase.

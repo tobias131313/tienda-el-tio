@@ -220,12 +220,7 @@ fieldset input{width:auto}
         <label for="f-dir">Dirección<input id="f-dir" required autocomplete="street-address" placeholder="Calle y número"></label>
         <label for="f-entre">Entre calles / referencia<input id="f-entre" placeholder="Opcional"></label>
         <label for="f-turno">Turno de entrega
-          <select id="f-turno">
-            <option>Hoy de 14 a 17 hs (pedí hasta las 11)</option>
-            <option>Hoy de 18 a 21 hs (pedí hasta las 17)</option>
-            <option>Mañana de 14 a 17 hs</option>
-            <option>Mañana de 18 a 21 hs</option>
-          </select>
+          <select id="f-turno"></select>
         </label>
         <fieldset><legend>Forma de pago</legend>
           <label><input type="radio" name="pago" id="p-mp" value="Mercado Pago" checked>Mercado Pago</label>
@@ -458,7 +453,18 @@ function renderCart(){
   $("totals").innerHTML = `<div><span>Productos</span><span>${fmt(t.sub)}</span></div><div><span>Envío</span><span>${t.envio?fmt(t.envio):"Gratis"}</span></div><div class="grand"><span>Total</span><span>${fmt(t.total)}</span></div>`;
   $("ftotal").textContent = fmt(t.total);
 }
-function openSheet(){ $("step1").hidden=false; $("step2").hidden=true; renderCart(); $("sheet").hidden=false; document.body.style.overflow="hidden" }
+// Turnos: solo los que todavía se pueden pedir (hora de Argentina). Pedí hasta las 11 para 14-17 y hasta las 17 para 18-21.
+function fillTurnos(){
+  const h=+new Intl.DateTimeFormat("en-GB",{timeZone:"America/Argentina/Buenos_Aires",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date()).replace(":",".");
+  const sel=$("f-turno"), prev=sel.value, ops=[];
+  if(h<11) ops.push("Hoy de 14 a 17 hs (pedí hasta las 11)");
+  if(h<17) ops.push("Hoy de 18 a 21 hs (pedí hasta las 17)");
+  ops.push("Mañana de 14 a 17 hs","Mañana de 18 a 21 hs");
+  sel.innerHTML=ops.map(o=>`<option>${o}</option>`).join("");
+  if(ops.includes(prev)) sel.value=prev;
+}
+fillTurnos();
+function openSheet(){ fillTurnos(); $("step1").hidden=false; $("step2").hidden=true; renderCart(); $("sheet").hidden=false; document.body.style.overflow="hidden" }
 function closeSheet(){ $("sheet").hidden=true; document.body.style.overflow="" }
 function buildMsg(){
   const t=totals(), v=id=>$(id).value.trim(), pago=document.querySelector('input[name="pago"]:checked').value;

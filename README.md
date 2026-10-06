@@ -14,6 +14,7 @@ Para actualizar precios se regenera `productos.json` desde la última lista de p
 
 1. Fotos guardadas: archivo `fotos/<EAN>.jpg` y el EAN agregado a la lista `"f"` de `productos.json`. Tienen prioridad.
    La mayoría salen de las tiendas online de Carrefour, Jumbo y Día buscando por código de barras. Los links quedan en `herramientas/fotos_urls.json` y el workflow "Bajar fotos" (`herramientas/bajar_fotos.py`) las baja cuando ese archivo cambia: cuadradas de 400 px, fondo blanco, sin la franja de color de e-commerce y salteando los carteles de "imagen no disponible". Nunca pisa una foto que ya está.
+   Para lo que no está en esas tres tiendas, `herramientas/maxi_listar.py` lista el catálogo de Maxiconsumo (nombre y foto). Maxiconsumo no publica códigos de barras, así que esas fotos se emparejan por nombre y tamaño y se revisan a ojo antes de cargarlas.
 2. Si no hay foto propia, la página busca la foto por código de barras en Open Food Facts (base libre).
 3. Si no hay ninguna, se muestra la inicial del producto.
 

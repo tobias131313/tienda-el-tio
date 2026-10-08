@@ -176,6 +176,11 @@ fieldset input{width:auto}
 .steps span.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
 .again{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;font:inherit;font-weight:700;padding:12px 14px;border-radius:var(--r);border:2px solid var(--brand);background:var(--surface);color:var(--ink);cursor:pointer;margin-bottom:14px;text-align:left}
 .again small{display:block;font-weight:500;color:var(--muted)}
+.wish{display:grid;gap:8px;margin-top:6px;padding:12px;border-radius:var(--r);background:var(--surface);border:2px dashed var(--tag)}
+.wish h3{margin:0;font-family:var(--font-display);font-weight:800;font-size:1.05rem}
+.wish p{margin:0;font-size:.85rem;color:var(--muted)}
+.wish .cta{justify-content:center}
+.empty .ghost{margin-top:10px}
 .saved{font-size:.8rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ph,:root:not([data-theme="light"]) .thumb,:root:not([data-theme="light"]) .zimg{background:var(--phbg)}}
 :root[data-theme="dark"] .ph,:root[data-theme="dark"] .thumb,:root[data-theme="dark"] .zimg{background:var(--phbg)}
@@ -274,6 +279,12 @@ fieldset input{width:auto}
       <button class="ghost" id="copy">Copiar pedido</button>
       <div class="msg" id="msg"></div>
       <button class="ghost" id="back">Cambiar mis datos</button>
+      <div class="wish" id="wish">
+        <h3>¿Te faltó algo?</h3>
+        <p>Contanos qué producto no encontraste o cuál te gustaría que tengamos. Lo tenemos en cuenta para la próxima compra.</p>
+        <textarea id="w-txt" rows="3" placeholder="Ej: yerba Playadito 1 kg, leche de almendras"></textarea>
+        <a class="cta wa" id="w-send" href="#" target="_blank" rel="noopener"><span>Mandar sugerencia</span></a>
+      </div>
     </div>
   </div>
 </div>
@@ -481,7 +492,10 @@ function render(){
   list.appendChild(frag);
   $("count").textContent = results.length.toLocaleString("es-AR")+(results.length===1?" producto":" productos")+(rubro>=0?" en "+R[rubro]:"")+(sub>=0?" · "+S[sub]:"")+(query?" para “"+query+"”":"");
   $("more").hidden = results.length<=shown;
-  if(!results.length) list.innerHTML='<li class="empty">No encontramos ese producto. Probá con otra palabra o con la marca.</li>';
+  if(!results.length){
+    list.innerHTML='<li class="empty">No encontramos ese producto. Probá con otra palabra o con la marca.<br></li>';
+    if(query.trim()){ const a=document.createElement("a"); a.className="ghost wa"; a.target="_blank"; a.rel="noopener"; a.textContent="Pedinos que lo traigamos"; a.href=wishLink("No encontré: "+query); list.firstChild.appendChild(a) }
+  }
   bar();
 }
 function totals(){
@@ -575,6 +589,9 @@ $("clear").onclick=()=>{
   closeSheet(); render();
 };
 $("back").onclick=()=>step(2);
+// Sugerencias de productos: salen por WhatsApp con un encabezado propio para juntarlas y orientar las compras.
+function wishLink(txt){ const n=$("f-nombre").value.trim(); return "https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent((PRUEBA?"*⚠️ PRUEBA*\n":"")+"*Sugerencia de producto*\n"+txt.trim()+(n?"\n\nDe: "+n:"")) }
+$("w-send").onclick=e=>{ const t=$("w-txt").value; if(!t.trim()){ e.preventDefault(); $("w-txt").focus(); return } $("w-send").href=wishLink(t); setTimeout(()=>{ $("w-txt").value=""; $("w-send").firstChild.textContent="¡Gracias! Mandar otra" },500) };
 $("back1").onclick=()=>step(1);
 $("next").onclick=()=>{ if(totals().sub>=MIN){ loadCustomer(); step(2) } };
 $("orden").onchange=e=>{ orden=e.target.value; shown=PAGE; render() };

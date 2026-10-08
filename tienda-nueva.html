@@ -124,7 +124,7 @@ fieldset input{width:auto}
 .grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
-.ph{position:relative;aspect-ratio:4/3;border-radius:8px;background:var(--phbg);display:grid;place-items:center;overflow:hidden;cursor:zoom-in;font-family:var(--font-display);font-weight:800;font-size:2.4rem;color:#9aa59c}
+.ph{position:relative;aspect-ratio:1;border-radius:8px;background:var(--phbg);display:grid;place-items:center;overflow:hidden;cursor:zoom-in;font-family:var(--font-display);font-weight:800;font-size:2.4rem;color:#9aa59c}
 .ph img{width:100%;height:100%;object-fit:contain}
 .ph .ctl{position:absolute;right:6px;bottom:6px;font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--ink)}
 .ph .qty button{width:32px;height:32px;font-size:1.1rem;line-height:1;padding:0}
@@ -161,6 +161,9 @@ fieldset input{width:auto}
 .ph .ico{font-size:2.9rem;filter:none;opacity:1;line-height:1}
 .thumb .ico{font-size:2.2rem;filter:none;opacity:1}
 .zimg{aspect-ratio:16/9;max-width:none}
+.ph.foto,.thumb.foto,.zimg.foto{background:#fff}
+
+.zimg.foto{aspect-ratio:1;max-width:420px}
 .zimg .ico{font-size:5.5rem}
 .thumb{width:64px;height:64px;cursor:pointer}
 .item{grid-template-columns:64px 1fr auto}
@@ -280,7 +283,7 @@ const WHATSAPP = "5491128656389"; // WhatsApp del súper: 11 2865-6389
 // Link de prueba para amigos: ?prueba marca los pedidos como PRUEBA (se recuerda mientras navegan).
 let PRUEBA=false; try{ if(/[?&]prueba/.test(location.search)) sessionStorage.setItem("eltio-prueba","1"); PRUEBA=sessionStorage.getItem("eltio-prueba")==="1" }catch(e){ PRUEBA=/[?&]prueba/.test(location.search) }
 const MIN = 25000, ENVIO = 2000, GRATIS = 50000, PAGE = 60;
-let R = [], P = [], S = [], IDX = [], TOK = [], byEan = new Map();
+let R = [], P = [], S = [], IDX = [], TOK = [], byEan = new Map(), LOCAL_IMG = new Set();
 // Productos por peso: p[4] = gramos por cada toque del +. El precio de lista es por kg.
 const stepOf = p => p[4]||0;
 const fmtW = g => g>=1000 ? (g/1000).toLocaleString("es-AR")+" kg" : g+" g";
@@ -349,7 +352,7 @@ function qtyCtl(e){
   const p=document.createElement("button"); p.textContent="+"; p.setAttribute("aria-label","Agregar uno"); p.onclick=()=>setQ(e,q+1);
   wrap.append(m,s,p); return wrap;
 }
-// Sin fotos: dibujo según el producto (palabra del nombre), si no según su subcategoría, si no según su rubro.
+// Fotos propias (súper y Maxiconsumo, en fotos/<EAN>.jpg). Sin foto propia: dibujo según el producto (palabra del nombre), si no según su subcategoría, si no según su rubro.
 const TINT={"Almacén":"#fff3d6","Perfumería e Higiene":"#f3e8ff","Limpieza":"#e3f4ff","Lácteos":"#eef6ff","Bebidas con alcohol":"#fde8ec","Bebidas sin alcohol":"#e4f7f4","Galletitas":"#fbefe0","Golosinas y Kiosco":"#ffe8f3","Bazar y Descartables":"#eef0f3","Panificados":"#fbf0dc","Fiambrería":"#fff0e6","Congelados":"#e6f3fb","Carnicería":"#fde9e7","Snacks Salados":"#fff6d9","Pastas Frescas":"#fdf3df","Mascotas":"#f1ece4","Bebés":"#eaf5ff","Verdulería y Frutas":"#e8f7e4"};
 const SUBICON={"Aceites y vinagres":"🫒","Aderezos y salsas":"🥫","Arroz":"🍚","Azúcar y endulzantes":"🍬","Café, té y mate cocido":"☕","Caldos y sopas":"🍲","Cereales y avenas":"🥣","Conservas de pescado":"🐟","Conservas de vegetales y frutas":"🥫","Dulces y mermeladas":"🍯","Especias y condimentos":"🌶️","Fideos secos":"🍝","Harinas y premezclas":"🌾","Huevos":"🥚","Legumbres":"🫘","Pan rallado y rebozadores":"🍞","Polenta y sémola":"🌽","Postres y repostería":"🍮","Puré y salsas de tomate":"🍅","Purés de papas":"🥔","Sal":"🧂","Snacks y frutos secos":"🥜","Yerba mate":"🧉",
 "Artículos para el hogar":"🏠","Descartables":"🥤","Juguetes y regalería":"🧸","Papel de aluminio, film y bolsas":"🧻","Pilas y lámparas":"🔋","Utensilios de cocina":"🍳","Vajilla y vasos":"🍽️","Velas, fósforos y encendedores":"🕯️",
@@ -366,7 +369,7 @@ const SUBICON={"Aceites y vinagres":"🫒","Aderezos y salsas":"🥫","Arroz":"�
 "Accesorios para mascotas":"🦴","Alimento para gatos":"🐱","Alimento para perros":"🐶",
 "Pan lactal y de molde":"🍞","Panes y facturas":"🥐","Prepizzas y tapas":"🍕","Tostadas y grisines":"🥖",
 "Pastas frescas":"🍝","Tapas de empanadas y tartas":"🥟","Ñoquis y ravioles":"🥟",
-"Afeitado y depilación":"🪒","Algodón e higiene":"🧴","Champú y acondicionador":"🧴","Cuidado de la piel y cremas":"🧴","Cuidado del cabello y coloración":"💇","Cuidado dental":"🪥","Desodorantes":"🧴","Jabones de tocador":"🧼","Maquillaje y manicuría":"💄","Papel higiénico":"🧻","Pañales y cuidado de adultos":"🧻","Pañuelos y servilletas de papel":"🧻","Perfumes y colonias":"🌸","Preservativos":"❤️","Toallitas femeninas y protectores":"🌸",
+"Afeitado y depilación":"🪒","Algodón e higiene":"🧴","Champú y acondicionador":"🧴","Cuidado de la piel y cremas":"🧴","Cuidado del cabello y coloración":"🧴","Cuidado dental":"🪥","Desodorantes":"🧴","Jabones de tocador":"🧼","Maquillaje y manicuría":"💄","Papel higiénico":"🧻","Pañales y cuidado de adultos":"🧻","Pañuelos y servilletas de papel":"🧻","Perfumes y colonias":"🌸","Preservativos":"❤️","Toallitas femeninas y protectores":"🌸",
 "Frutas":"🍎","Verduras":"🥬"};
 // Palabras del nombre que dan un dibujo más justo que la subcategoría.
 const WORDICON=[[/\bbanana/,"🍌"],[/\bmanzana/,"🍎"],[/\bnaranja/,"🍊"],[/\blimon/,"🍋"],[/\bpera\b/,"🍐"],[/\buva/,"🍇"],[/\bfrutilla/,"🍓"],[/\bdurazno/,"🍑"],[/\banana|\bpina\b/,"🍍"],[/\bcoco\b/,"🥥"],[/\bpapa(s)?\b(?! ?frita)/,"🥔"],[/\bbatata/,"🍠"],[/\btomate/,"🍅"],[/\bcebolla/,"🧅"],[/\bajo\b/,"🧄"],[/\bzanahoria/,"🥕"],[/\blechuga|\bacelga|\bespinaca/,"🥬"],[/\bzapallo|\bcalabaza/,"🎃"],[/\bchoclo|\bmaiz/,"🌽"],[/\bmorron|\bpimiento/,"🫑"],[/\bpalta/,"🥑"],[/\bberenjena/,"🍆"],[/\bpepino/,"🥒"],[/\bbrocoli/,"🥦"],[/\bhongo|\bchampi/,"🍄"],
@@ -384,12 +387,15 @@ function iconOf(p){
 function thumb(p){
   const box=document.createElement("div"); box.className="thumb"; box.style.setProperty("--tint",TINT[R[p[2]]]||"");
   const i=document.createElement("span"); i.className="ico"; i.setAttribute("aria-hidden","true"); i.textContent=iconOf(p); box.appendChild(i);
+  if(LOCAL_IMG.has(p[0])) showImg(box,"fotos/"+p[0]+".jpg");
   return box;
 }
+function showImg(box,u){ const im=new Image(); im.alt=""; im.onload=()=>{ box.querySelectorAll(".ico").forEach(n=>n.remove()); box.classList.add("foto"); box.prepend(im) }; im.src=u }
 let zcur=null;
 function openZoom(p){
   zcur=p; $("zname").textContent=show(p); $("zrubro").textContent=R[p[2]]+(S[p[5]]?" · "+S[p[5]]:""); $("zprice").textContent=priceLabel(p);
   const z=$("zimg"); z.innerHTML='<span class="ico" aria-hidden="true"></span>'; z.firstChild.textContent=iconOf(p); z.style.setProperty("--tint",TINT[R[p[2]]]||"");
+  if(LOCAL_IMG.has(p[0])){ const im=new Image(); im.alt=show(p); im.onload=()=>{ z.textContent=""; z.classList.add("foto"); z.appendChild(im) }; im.src="fotos/"+p[0]+".jpg" } else z.classList.remove("foto");
   zqty(); $("zoom").hidden=false; document.body.style.overflow="hidden";
 }
 function zqty(){ const q=$("zqty"); q.innerHTML=""; q.appendChild(qtyCtl(zcur[0])) }
@@ -587,7 +593,7 @@ function lastOrder(){ try{ const l=JSON.parse(localStorage.getItem("eltio-ultimo
 $("testbar").hidden=!PRUEBA;
 $("count").textContent = "Cargando productos…";
 fetch("productos.json").then(r=>r.json()).then(DATA=>{
-  R = DATA.r; P = DATA.p; IDX = P.map(p => norm(p[1] + " " + (p[6]||"") + " " + p[0])); S = DATA.s||[]; TOK = IDX.map(s => s.split(/[^a-z0-9]+/).filter(Boolean)); byEan = new Map(P.map(p=>[p[0],p]));
+  R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + (p[6]||"") + " " + p[0])); S = DATA.s||[]; TOK = IDX.map(s => s.split(/[^a-z0-9]+/).filter(Boolean)); byEan = new Map(P.map(p=>[p[0],p]));
   try{ const s = JSON.parse(localStorage.getItem("eltio-cart")||"[]"); s.forEach(([e,q])=>{ if(byEan.has(e)) cart.set(e,q) }) }catch(e){}
   chips(); render();
 }).catch(err=>{ console.error(err); $("count").textContent = "No pudimos cargar los productos. Recargá la página." });

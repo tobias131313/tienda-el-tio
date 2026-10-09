@@ -181,6 +181,15 @@ fieldset input{width:auto}
 .wish p{margin:0;font-size:.85rem;color:var(--muted)}
 .wish .cta{justify-content:center}
 .empty .ghost{margin-top:10px}
+.recent{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:.8rem}
+.recent b{color:var(--band-ink);font-weight:600;opacity:.85}
+.recent button{font:inherit;font-size:.8rem;padding:4px 10px;border-radius:999px;border:0;background:rgba(255,255,255,.18);color:var(--band-ink);cursor:pointer}
+.chip.mk{font-size:.78rem;padding:4px 10px;font-weight:600}
+.old{font-size:.78rem;color:var(--muted);text-decoration:line-through;margin-left:6px;font-weight:600}
+.badge{position:absolute;left:6px;top:6px;background:var(--warn);color:#fff;font-family:var(--font-body);font-size:.72rem;font-weight:800;padding:2px 7px;border-radius:999px}
+.repl{font-size:.8rem;padding:6px 8px;margin-top:6px}
+.zone{font-size:.82rem;font-weight:600;color:var(--warn);margin:0}
+.ordnum{font-family:var(--font-display);font-weight:800;font-size:1.1rem;margin:0}
 .saved{font-size:.8rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ph,:root:not([data-theme="light"]) .thumb,:root:not([data-theme="light"]) .zimg{background:var(--phbg)}}
 :root[data-theme="dark"] .ph,:root[data-theme="dark"] .thumb,:root[data-theme="dark"] .zimg{background:var(--phbg)}
@@ -198,6 +207,7 @@ fieldset input{width:auto}
         <div><h1>Súper <span>El Tío</span></h1><div class="promise">Tu súper de Moreno, a domicilio</div></div>
       </div>
       <input id="q" class="search" type="search" placeholder="Buscá un producto o marca" autocomplete="off" aria-label="Buscar producto">
+      <div class="recent" id="recent" hidden></div>
     </div>
     <div class="chips" id="chips" role="toolbar" aria-label="Rubros"></div>
     <div class="chips" id="subchips" role="toolbar" aria-label="Subcategorías" hidden></div>
@@ -206,6 +216,7 @@ fieldset input{width:auto}
   <div class="strip" style="margin-block:10px 12px"><span>🛵 Envío <b>$2.000</b> · gratis desde <b>$50.000</b></span><span>🕑 Entregas <b>14 a 17</b> y <b>18 a 21</b> hs</span><span>🧾 Mínimo <b>$25.000</b></span><span>💳 Efectivo, transferencia o QR</span></div>
   <div class="tools" id="tools"><div class="count" id="count"></div>
     <select id="orden" aria-label="Ordenar"><option value="">Ordenar</option><option value="asc">Más baratos primero</option><option value="desc">Más caros primero</option><option value="az">De la A a la Z</option></select></div>
+  <div class="chips" id="marcas" role="toolbar" aria-label="Marcas" hidden></div>
   <div id="home"></div>
   <ul class="grid" id="list"></ul>
   <button class="more" id="more" hidden>Ver más productos</button>
@@ -254,6 +265,7 @@ fieldset input{width:auto}
         <label for="f-nombre">Nombre y apellido<input id="f-nombre" required autocomplete="name"></label>
         <label for="f-tel">Teléfono<input id="f-tel" type="tel" required autocomplete="tel" placeholder="11 2345 6789"></label>
         <label for="f-dir">Dirección<input id="f-dir" required autocomplete="street-address" placeholder="Calle y número"></label>
+        <p class="zone" id="zone" hidden>Esta dirección parece quedar a más de 30 cuadras del súper. Mandá el pedido igual y te confirmamos si llegamos.</p>
         <label for="f-entre">Entre calles / referencia<input id="f-entre" placeholder="Opcional"></label>
         <label for="f-turno">Turno de entrega
           <select id="f-turno"></select>
@@ -264,7 +276,6 @@ fieldset input{width:auto}
           <label><input type="radio" name="pago" id="p-qr" value="QR">QR</label>
         </fieldset>
         <label for="f-vuelto" id="vueltobox">¿Con cuánto pagás? (para llevarte el vuelto)<input id="f-vuelto" inputmode="numeric" placeholder="Ej: 30000"></label>
-        <label class="check" for="f-reemp"><input type="checkbox" id="f-reemp" checked>Si falta algo, escribime por WhatsApp para ofrecerme un reemplazo</label>
         <label class="check" for="f-ofertas"><input type="checkbox" id="f-ofertas">Quiero recibir ofertas del súper por WhatsApp</label>
         <label for="f-notas">Notas<textarea id="f-notas" rows="2" placeholder="Ej: tocar timbre 2B"></textarea></label>
         <div class="err" id="err" hidden></div>
@@ -273,6 +284,7 @@ fieldset input{width:auto}
       </form>
     </div>
     <div id="step2" class="done" hidden>
+      <p class="ordnum" id="ordnum"></p>
       <p>Tu pedido está listo. Tocá el botón para mandarlo por WhatsApp. Si no se abre, copiá el texto y mandalo al número del súper.</p>
       <p class="demo" id="testthanks" hidden>¡Gracias por probar! Después contanos qué te costó o qué cambiarías.</p>
       <a class="cta wa" id="walink" href="#" target="_blank" rel="noopener"><span>Abrir WhatsApp</span><span>➜</span></a>
@@ -295,6 +307,7 @@ const WHATSAPP = "5491128656389"; // WhatsApp del súper: 11 2865-6389
 let PRUEBA=false; try{ if(/[?&]prueba/.test(location.search)) sessionStorage.setItem("eltio-prueba","1"); PRUEBA=sessionStorage.getItem("eltio-prueba")==="1" }catch(e){ PRUEBA=/[?&]prueba/.test(location.search) }
 const MIN = 25000, ENVIO = 2000, GRATIS = 50000, PAGE = 60;
 let R = [], P = [], S = [], IDX = [], TOK = [], byEan = new Map(), LOCAL_IMG = new Set();
+let BR = [], MK = new Map(), RANK = new Map(), OFERTAS = [];
 // Productos por peso: p[4] = gramos por cada toque del +. El precio de lista es por kg.
 const stepOf = p => p[4]||0;
 const fmtW = g => g>=1000 ? (g/1000).toLocaleString("es-AR")+" kg" : g+" g";
@@ -306,7 +319,7 @@ const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 const show = p => p[6] ? p[1] : nice(p[1]);
 const nice = s => s.toLowerCase().replace(/(^|[\s(/.-])([a-záéíóúñü])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(\d+)\s?(Gr|Grs|Kg|Ml|Lt|Cc|Un|Cm)\b/gi,(m,a,b)=>a+" "+b.toLowerCase()).replace(/\bX\b/g,"x");
 const cart = new Map();
-let orden = "", rubro = -1, sub = -1, query = "", shown = PAGE, results = [];
+let orden = "", marca = -1, rubro = -1, sub = -1, query = "", shown = PAGE, results = [];
 const $ = id => document.getElementById(id);
 
 function subchips(){
@@ -315,7 +328,7 @@ function subchips(){
   const counts=new Map(); P.forEach(p=>{ if(p[2]===rubro && p[5]>=0) counts.set(p[5],(counts.get(p[5])||0)+1) });
   if(counts.size<2){ el.hidden=true; return }
   el.hidden=false;
-  const mk=(i,label)=>{ const b=document.createElement("button"); b.className="chip sub"; b.textContent=label; b.setAttribute("aria-pressed",String(sub===i)); b.onclick=()=>{sub=i;shown=PAGE;subchips();render()}; el.appendChild(b) };
+  const mk=(i,label)=>{ const b=document.createElement("button"); b.className="chip sub"; b.textContent=label; b.setAttribute("aria-pressed",String(sub===i)); b.onclick=()=>{sub=i;marca=-1;shown=PAGE;subchips();render()}; el.appendChild(b) };
   mk(-1,"Todo "+R[rubro]);
   [...counts.keys()].sort((a,b)=>S[a].localeCompare(S[b],"es")).forEach(i=>mk(i,S[i]));
 }
@@ -323,7 +336,7 @@ function chips(){
   subchips();
   const counts = R.map(()=>0); P.forEach(p=>counts[p[2]]++);
   const el = $("chips"); el.innerHTML = "";
-  const mk = (i,label)=>{ const b=document.createElement("button"); b.className="chip"; b.textContent=label; b.setAttribute("aria-pressed", String(rubro===i)); b.onclick=()=>{rubro=i;sub=-1;shown=PAGE;chips();render()}; el.appendChild(b) };
+  const mk = (i,label)=>{ const b=document.createElement("button"); b.className="chip"; b.textContent=label; b.setAttribute("aria-pressed", String(rubro===i)); b.onclick=()=>{ const was=!query.trim()&&rubro<0; rubro=i;sub=-1;marca=-1;shown=PAGE; if(was&&i>=0) enterResults(); chips();render(); leaveResultsIfHome() }; el.appendChild(b) };
   mk(-1,"Todo");
   R.map((r,i)=>[r,i]).sort((a,b)=>counts[b[1]]-counts[a[1]]).forEach(([r,i])=>mk(i,r));
 }
@@ -336,6 +349,7 @@ function filter(){
   for(let i=0;i<P.length;i++){
     if(rubro>=0 && P[i][2]!==rubro) continue;
     if(sub>=0 && P[i][5]!==sub) continue;
+    if(marca>=0 && MK.get(P[i][0])!==marca) continue;
     let all=true, approx=false;
     for(const vs of variants){
       if(vs.some(v=>IDX[i].includes(v))) continue;
@@ -345,6 +359,8 @@ function filter(){
     if(!all) continue;
     (approx?abbr:exact).push(P[i]);
   }
+  // Al buscar, primero lo que más se vende (orden de ventas reales de Vendita).
+  if(words.length && RANK.size){ const rk=p=>RANK.has(p[0])?RANK.get(p[0]):1e9; exact.sort((a,b)=>rk(a)-rk(b)); abbr.sort((a,b)=>rk(a)-rk(b)) }
   results = exact.concat(abbr);
   // Navegando un rubro sin buscar: agrupado por subcategoría ("todos los fideos juntos").
   if(rubro>=0 && !words.length) results.sort((a,b)=> ((S[a[5]]||"~").localeCompare(S[b[5]]||"~","es")) || show(a).localeCompare(show(b),"es"));
@@ -407,10 +423,11 @@ function openZoom(p){
   zcur=p; $("zname").textContent=show(p); $("zrubro").textContent=R[p[2]]+(S[p[5]]?" · "+S[p[5]]:""); $("zprice").textContent=priceLabel(p);
   const z=$("zimg"); z.innerHTML='<span class="ico" aria-hidden="true"></span>'; z.firstChild.textContent=iconOf(p); z.style.setProperty("--tint",TINT[R[p[2]]]||"");
   if(LOCAL_IMG.has(p[0])){ const im=new Image(); im.alt=show(p); im.onload=()=>{ z.textContent=""; z.classList.add("foto"); z.appendChild(im) }; im.src="fotos/"+p[0]+".jpg" } else z.classList.remove("foto");
-  zqty(); $("zoom").hidden=false; document.body.style.overflow="hidden";
+  zqty(); $("zoom").hidden=false; document.body.style.overflow="hidden"; pushNav("zoom");
 }
 function zqty(){ const q=$("zqty"); q.innerHTML=""; q.appendChild(qtyCtl(zcur[0])) }
-function closeZoom(){ $("zoom").hidden=true; zcur=null; if($("sheet").hidden) document.body.style.overflow="" }
+function hideZoom(){ $("zoom").hidden=true; zcur=null; if($("sheet").hidden) document.body.style.overflow="" }
+function closeZoom(){ closeNav("zoom") }
 const PORTADA=[
   ["Lo más pedido",["7790895000997","7790742348302","7793704000928","7790070012050","7792540000017","7792180139320","7790070320308","7790070106254","7798094229881","7790742387806","7790990001073","7793253000974"]],
   ["Para el asado",["480","806","734","2030","7790290101602","7790895000997","7792798012923","7790130003035"]],
@@ -419,7 +436,9 @@ const PORTADA=[
 ];
 const OLVIDO=["2030","7798094229881","7790895000997","480","7792540000017","7790742348302","7792798012923"];
 const ICON={"Almacén":"🥫","Perfumería e Higiene":"🧴","Limpieza":"🧽","Lácteos":"🥛","Bebidas con alcohol":"🍷","Bebidas sin alcohol":"🥤","Galletitas":"🍪","Golosinas y Kiosco":"🍬","Bazar y Descartables":"🍽️","Panificados":"🍞","Fiambrería":"🧀","Congelados":"🧊","Carnicería":"🥩","Snacks Salados":"🥨","Pastas Frescas":"🍝","Mascotas":"🐾","Bebés":"🍼","Verdulería y Frutas":"🥬"};
-const notes=new Map();
+const notes=new Map(), repl=new Map();
+try{ JSON.parse(localStorage.getItem("eltio-repl")||"[]").forEach(([e,t])=>repl.set(e,t)) }catch(e){}
+function saveRepl(){ try{ localStorage.setItem("eltio-repl",JSON.stringify([...repl])) }catch(e){} }
 try{ JSON.parse(localStorage.getItem("eltio-notas")||"[]").forEach(([e,t])=>notes.set(e,t)) }catch(e){}
 function saveNotes(){ try{ localStorage.setItem("eltio-notas",JSON.stringify([...notes])) }catch(e){} }
 function ctl(e){
@@ -431,9 +450,11 @@ function card(p){
   const li=document.createElement("li"), c=document.createElement("div"); c.className="card";
   const ph=thumb(p); ph.className="ph"; ph.onclick=()=>openZoom(p); ph.appendChild(ctl(p[0]));
   const pr=document.createElement("div"); pr.className="price"; pr.textContent=priceLabel(p);
+  if(p[7]){ const o=document.createElement("span"); o.className="old"; o.textContent=fmt(p[7]); const w=document.createElement("div"); w.append(pr,o); w.style.display="flex"; w.style.alignItems="baseline"; c.dataset.of="1"; const b=document.createElement("span"); b.className="badge"; b.textContent="Oferta"; ph.appendChild(b); c.append(ph,w); }
   const n=document.createElement("div"); n.className="cname"; n.textContent=show(p); n.onclick=()=>openZoom(p);
   const sb=document.createElement("div"); sb.className="brand"; sb.textContent=S[p[5]]||R[p[2]];
-  c.append(ph,pr,n,sb); li.appendChild(c); return li;
+  if(c.dataset.of) c.append(n,sb); else c.append(ph,pr,n,sb);
+  li.appendChild(c); return li;
 }
 function strip(title,eans){
   const ps=eans.map(e=>byEan.get(e)).filter(Boolean); if(!ps.length) return null;
@@ -458,12 +479,13 @@ function home(){
   const counts=R.map(()=>0); P.forEach(p=>counts[p[2]]++);
   R.map((r,i)=>[r,i]).sort((a,b)=>counts[b[1]]-counts[a[1]]).forEach(([r,i])=>{
     const b=document.createElement("button"); b.className="rb"; b.innerHTML="<i></i><span></span>"; b.firstChild.textContent=ICON[r]||"🛒"; b.lastChild.textContent=r;
-    b.onclick=()=>{rubro=i;sub=-1;shown=PAGE;chips();render();window.scrollTo(0,0)}; g.appendChild(b);
+    b.onclick=()=>{rubro=i;sub=-1;marca=-1;shown=PAGE;enterResults();chips();render();window.scrollTo(0,0)}; g.appendChild(b);
   });
   sec.append(h,g); el.appendChild(sec);
   const how=document.createElement("div"); how.className="how";
   how.innerHTML="<div><b>1. Elegí</b>Sumá productos al carrito.</div><div><b>2. Mandá</b>El pedido sale por WhatsApp.</div><div><b>3. Recibí</b>Te lo llevamos en el turno.</div>";
   el.appendChild(how);
+  if(OFERTAS.length){ const s=strip("Ofertas",OFERTAS); if(s) el.appendChild(s) }
   PORTADA.forEach(([t,e])=>{ const s=strip(t,e); if(s) el.appendChild(s) });
 }
 function row(p, inCart){
@@ -478,20 +500,34 @@ function row(p, inCart){
   const pr=document.createElement("div"); pr.className="price"; pr.textContent=priceLabel(p);
   right.append(pr, qtyCtl(p[0]));
   const th=thumb(p); th.onclick=()=>openZoom(p); n.onclick=()=>openZoom(p);
+  if(inCart){ const sel=document.createElement("select"); sel.className="repl"; sel.setAttribute("aria-label","Si no hay este producto");
+    [["c","Si falta: consultame"],["p","Si falta: uno parecido"],["n","Si falta: no traer"]].forEach(([v,t])=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; sel.appendChild(o) });
+    sel.value=repl.get(p[0])||"c"; sel.onchange=()=>{ if(sel.value==="c") repl.delete(p[0]); else repl.set(p[0],sel.value); saveRepl() }; left.appendChild(sel) }
   if(inCart){ const ni=document.createElement("input"); ni.className="note"; ni.id="nota-"+p[0]; ni.placeholder="Nota para este producto"; ni.value=notes.get(p[0])||""; ni.oninput=()=>{ const v=ni.value.trim(); if(v) notes.set(p[0],v); else notes.delete(p[0]); saveNotes() }; left.appendChild(ni) }
   li.prepend(th); li.append(left,right); return li;
+}
+// Marcas: chips con las marcas que más aparecen en lo que se está viendo.
+function marcas(){
+  const el=$("marcas"), cnt=new Map();
+  if(marca<0) results.forEach(p=>{ const m=MK.get(p[0]); if(m!==undefined) cnt.set(m,(cnt.get(m)||0)+1) });
+  const top=[...cnt].filter(([m,n])=>n>=2).sort((a,b)=>b[1]-a[1]).slice(0,12).map(x=>x[0]);
+  if(marca<0 && (top.length<2 || results.length<8)){ el.hidden=true; return }
+  el.hidden=false; el.innerHTML="";
+  const mk=(i,label)=>{ const b=document.createElement("button"); b.className="chip mk"; b.textContent=label; b.setAttribute("aria-pressed",String(marca===i&&i>=0)); b.onclick=()=>{ marca=marca===i?-1:i; shown=PAGE; render() }; el.appendChild(b) };
+  if(marca>=0) mk(marca,"✕ "+BR[marca]); else top.forEach(i=>mk(i,BR[i]));
 }
 function render(){
   filter(); sortResults();
   const list=$("list"); list.innerHTML="";
   const isHome = !query.trim() && rubro<0;
   $("home").hidden=!isHome; list.hidden=isHome; $("tools").hidden=isHome;
-  if(isHome){ home(); $("more").hidden=true; bar(); return }
+  if(isHome){ home(); $("more").hidden=true; $("marcas").hidden=true; bar(); return }
   const frag=document.createDocumentFragment();
   results.slice(0,shown).forEach(p=>frag.appendChild(card(p)));
   list.appendChild(frag);
   $("count").textContent = results.length.toLocaleString("es-AR")+(results.length===1?" producto":" productos")+(rubro>=0?" en "+R[rubro]:"")+(sub>=0?" · "+S[sub]:"")+(query?" para “"+query+"”":"");
   $("more").hidden = results.length<=shown;
+  marcas();
   if(!results.length){
     list.innerHTML='<li class="empty">No encontramos ese producto. Probá con otra palabra o con la marca.<br></li>';
     if(query.trim()){ const a=document.createElement("a"); a.className="ghost wa"; a.target="_blank"; a.rel="noopener"; a.textContent="Pedinos que lo traigamos"; a.href=wishLink("No encontré: "+query); list.firstChild.appendChild(a) }
@@ -514,7 +550,15 @@ function bar(){
     : t.sub<GRATIS ? "Te faltan <b>"+fmt(GRATIS-t.sub)+"</b> para el envío gratis."
     : "<b>¡Tenés envío gratis!</b>";
 }
+// Búsquedas recientes: se guardan cuando la búsqueda terminó en un producto agregado.
+let RECENT=[]; try{ RECENT=JSON.parse(localStorage.getItem("eltio-busquedas")||"[]") }catch(e){}
+function saveRecent(){ const t=query.trim(); if(t.length<2) return; RECENT=[t,...RECENT.filter(x=>norm(x)!==norm(t))].slice(0,6); try{ localStorage.setItem("eltio-busquedas",JSON.stringify(RECENT)) }catch(e){} }
+function showRecent(){
+  const el=$("recent"); if(query.trim()||!RECENT.length||document.activeElement!==$("q")){ el.hidden=true; return }
+  el.innerHTML="<b>Buscaste:</b>"; RECENT.forEach(t=>{ const b=document.createElement("button"); b.type="button"; b.textContent=t; b.onmousedown=e=>e.preventDefault(); b.onclick=()=>{ $("q").value=t; $("q").dispatchEvent(new Event("input")) }; el.appendChild(b) }); el.hidden=false;
+}
 function setQ(e,q){
+  if(q>(cart.get(e)||0) && query.trim()) saveRecent();
   if(q<=0) cart.delete(e); else cart.set(e,q);
   try{ localStorage.setItem("eltio-cart", JSON.stringify([...cart])) }catch(err){}
   render(); if(!$("sheet").hidden) renderCart(); if(zcur) zqty();
@@ -543,18 +587,45 @@ function fillTurnos(){
 }
 fillTurnos();
 function step(n){ $("step1").hidden=n!==1; $("stepd").hidden=n!==2; $("step2").hidden=n!==3; ["st1","st2","st3"].forEach((id,i)=>$(id).classList.toggle("on",i===n-1)); $("ptitle").textContent=["Tu carrito","Tus datos","Enviá tu pedido"][n-1]; $("sheet").querySelector(".panel").scrollTop=0 }
-function openSheet(){ fillTurnos(); step(1); renderCart(); $("sheet").hidden=false; document.body.style.overflow="hidden" }
-function closeSheet(){ $("sheet").hidden=true; document.body.style.overflow="" }
+function openSheet(){ fillTurnos(); step(1); renderCart(); $("sheet").hidden=false; document.body.style.overflow="hidden"; pushNav("sheet") }
+function hideSheet(){ $("sheet").hidden=true; if($("zoom").hidden) document.body.style.overflow="" }
+function closeSheet(){ closeNav("sheet") }
+function goStep(n){ step(n); pushNav("s"+n) }
+// Botón atrás del celular: producto, carrito, pasos del pedido y rubro/búsqueda se apilan en el historial;
+// atrás cierra lo último que se abrió en vez de salir de la tienda.
+const NAV=[];
+function pushNav(k){ NAV.push(k); try{ history.pushState({eltio:NAV.length},"") }catch(e){} }
+function undoNav(k){
+  if(k==="zoom") hideZoom();
+  else if(k==="sheet") hideSheet();
+  else if(k==="s2") step(1);
+  else if(k==="s3") step(2);
+  else if(k==="res"){ query=""; $("q").value=""; rubro=-1; sub=-1; marca=-1; shown=PAGE; chips(); render(); window.scrollTo(0,0) }
+}
+function closeNav(k){ const i=NAV.lastIndexOf(k); if(i<0){ undoNav(k); return } history.go(i-NAV.length) }
+window.addEventListener("popstate",e=>{ const d=(e.state&&e.state.eltio)||0; while(NAV.length>d) undoNav(NAV.pop()) });
 function buildMsg(){
   const t=totals(), v=id=>$(id).value.trim(), pago=document.querySelector('input[name="pago"]:checked').value;
-  let s=(PRUEBA?"*⚠️ PEDIDO DE PRUEBA (no armar)*\n":"")+"*Pedido Súper El Tío*\n\n";
-  cart.forEach((q,e)=>{ const p=byEan.get(e); if(p) s+=`${qLabel(p,q)} x ${show(p)} = ${fmt(lineTotal(p,q))}${stepOf(p)?" (aprox., se cobra el peso real)":""}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"") });
+  let s=(PRUEBA?"*⚠️ PEDIDO DE PRUEBA (no armar)*\n":"")+"*Pedido Súper El Tío #"+ORDNUM+"*\n";
+  // Agrupado por rubro para armarlo recorriendo el local una sola vez.
+  const grupos=new Map(); cart.forEach((q,e)=>{ const p=byEan.get(e); if(p){ const r=R[p[2]]; if(!grupos.has(r)) grupos.set(r,[]); grupos.get(r).push([p,q,e]) } });
+  [...grupos.keys()].sort((a,b)=>a.localeCompare(b,"es")).forEach(r=>{
+    s+=`\n_${r.toUpperCase()}_\n`;
+    grupos.get(r).sort((a,b)=>show(a[0]).localeCompare(show(b[0]),"es")).forEach(([p,q,e])=>{
+      s+=`${qLabel(p,q)} x ${show(p)} = ${fmt(lineTotal(p,q))}${stepOf(p)?" (aprox., se cobra el peso real)":""}\n`+(notes.get(e)?`   Nota: ${notes.get(e)}\n`:"")+(repl.get(e)==="p"?"   Si no hay: cambiar por uno parecido\n":repl.get(e)==="n"?"   Si no hay: no traer\n":"");
+    });
+  });
   s+=`\nProductos: ${fmt(t.sub)}\nEnvío: ${t.envio?fmt(t.envio):"Gratis"}\n*Total: ${fmt(t.total)}*\n\n`;
-  s+=`Nombre: ${v("f-nombre")}\nTeléfono: ${v("f-tel")}\nDirección: ${v("f-dir")}${v("f-entre")?" ("+v("f-entre")+")":""}\nTurno: ${$("f-turno").value}\nPago: ${pago}${pago==="Efectivo"&&v("f-vuelto")?" (paga con $"+v("f-vuelto")+")":""}\nReemplazos: ${$("f-reemp").checked?"Consultarme antes":"No reemplazar"}\nOfertas por WhatsApp: ${$("f-ofertas").checked?"Sí":"No"}`;
+  s+=`Nombre: ${v("f-nombre")}\nTeléfono: ${v("f-tel")}\nDirección: ${v("f-dir")}${v("f-entre")?" ("+v("f-entre")+")":""}\nTurno: ${$("f-turno").value}\nPago: ${pago}${pago==="Efectivo"&&v("f-vuelto")?" (paga con $"+v("f-vuelto")+")":""}\nReemplazos: Consultarme antes${[...cart.keys()].some(e=>repl.has(e))?" (salvo lo indicado en cada producto)":""}\nOfertas por WhatsApp: ${$("f-ofertas").checked?"Sí":"No"}`;
   if(v("f-notas")) s+=`\nNotas: ${v("f-notas")}`;
+  if(ZONE_FAR) s+=`\n⚠️ Revisar zona: la dirección parece estar a más de 30 cuadras`;
   return s;
 }
-$("q").addEventListener("input",e=>{query=e.target.value;shown=PAGE;render()});
+function enterResults(){ if(!NAV.includes("res")) pushNav("res") }
+function leaveResultsIfHome(){ if(!query.trim() && rubro<0 && NAV[NAV.length-1]==="res") closeNav("res") }
+$("q").addEventListener("input",e=>{ const was=!query.trim()&&rubro<0; query=e.target.value; marca=-1; shown=PAGE; if(was&&query.trim()) enterResults(); render(); showRecent(); leaveResultsIfHome() });
+$("q").addEventListener("focus",showRecent);
+$("q").addEventListener("blur",()=>setTimeout(()=>{ $("recent").hidden=true },150));
 $("more").onclick=()=>{shown+=PAGE;render()};
 $("open").onclick=openSheet; $("close").onclick=closeSheet;
 $("sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet() });
@@ -569,11 +640,13 @@ $("form").addEventListener("submit",e=>{
   if(t.sub<MIN){ err.textContent="El pedido mínimo es de "+fmt(MIN)+". Te faltan "+fmt(MIN-t.sub)+"."; err.hidden=false; return }
   if(miss.length){ err.textContent="Completá tu "+miss.join(", ")+" para que podamos llevarte el pedido."; err.hidden=false; return }
   err.hidden=true;
+  ORDNUM=String(Math.floor(1000+Math.random()*9000));
   const msg=buildMsg();
+  $("ordnum").textContent="Pedido #"+ORDNUM;
   $("msg").textContent=msg;
   $("walink").href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(msg);
   saveCustomer(); saveLast();
-  step(3); $("copy").textContent="Copiar pedido"; $("testthanks").hidden=!PRUEBA;
+  goStep(3); $("copy").textContent="Copiar pedido"; $("testthanks").hidden=!PRUEBA;
 });
 $("copy").onclick=()=>{
   const txt=$("msg").textContent;
@@ -588,13 +661,25 @@ $("clear").onclick=()=>{
   cart.clear(); notes.clear(); saveNotes(); try{ localStorage.setItem("eltio-cart","[]") }catch(e){}
   closeSheet(); render();
 };
-$("back").onclick=()=>step(2);
+$("back").onclick=()=>closeNav("s3");
 // Sugerencias de productos: salen por WhatsApp con un encabezado propio para juntarlas y orientar las compras.
 function wishLink(txt){ const n=$("f-nombre").value.trim(); return "https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent((PRUEBA?"*⚠️ PRUEBA*\n":"")+"*Sugerencia de producto*\n"+txt.trim()+(n?"\n\nDe: "+n:"")) }
 $("w-send").onclick=e=>{ const t=$("w-txt").value; if(!t.trim()){ e.preventDefault(); $("w-txt").focus(); return } $("w-send").href=wishLink(t); setTimeout(()=>{ $("w-txt").value=""; $("w-send").firstChild.textContent="¡Gracias! Mandar otra" },500) };
-$("back1").onclick=()=>step(1);
-$("next").onclick=()=>{ if(totals().sub>=MIN){ loadCustomer(); step(2) } };
+$("back1").onclick=()=>closeNav("s2");
+$("next").onclick=()=>{ if(totals().sub>=MIN){ loadCustomer(); goStep(2) } };
 $("orden").onchange=e=>{ orden=e.target.value; shown=PAGE; render() };
+// Zona de entrega: ubica la dirección con Georef (datos.gob.ar) y avisa si queda a más de ~30 cuadras (3,2 km en línea recta).
+// Es solo un aviso: nunca frena el pedido, y si Georef no encuentra la dirección no dice nada.
+let ORDNUM="", ZONE_FAR=false, STORE_LL=null;
+const GEO=d=>fetch("https://apis.datos.gob.ar/georef/api/direcciones?max=1&departamento=Moreno&provincia=Buenos%20Aires&direccion="+encodeURIComponent(d)).then(r=>r.ok?r.json():null).then(j=>{ const u=j&&j.direcciones&&j.direcciones[0]&&j.direcciones[0].ubicacion; return u&&u.lat!=null?[u.lat,u.lon]:null }).catch(()=>null);
+const KM=(a,b)=>{ const r=x=>x*Math.PI/180, dl=r(b[0]-a[0]), dn=r(b[1]-a[1]); const h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2; return 12742*Math.asin(Math.sqrt(h)) };
+async function checkZone(){
+  const d=$("f-dir").value.trim(); ZONE_FAR=false; $("zone").hidden=true; if(!/\d/.test(d)) return;
+  if(!STORE_LL) STORE_LL=await GEO("Hipolito Yrigoyen 2020"); if(!STORE_LL) return;
+  const ll=await GEO(d); if(!ll || $("f-dir").value.trim()!==d) return;
+  ZONE_FAR=KM(STORE_LL,ll)>3.2; $("zone").hidden=!ZONE_FAR;
+}
+$("f-dir").addEventListener("change",checkZone);
 // Datos del cliente y último pedido: quedan guardados en su celular para la próxima vez.
 const FIELDS=["f-nombre","f-tel","f-dir","f-entre"];
 function saveCustomer(){ try{ const d={}; FIELDS.forEach(id=>d[id]=$(id).value.trim()); d.pago=document.querySelector('input[name="pago"]:checked').value; d.ofertas=$("f-ofertas").checked; localStorage.setItem("eltio-cliente",JSON.stringify(d)) }catch(e){} }
@@ -603,9 +688,9 @@ function loadCustomer(){
   if(!d || FIELDS.some(id=>$(id).value.trim())) return;
   FIELDS.forEach(id=>{ if(d[id]) $(id).value=d[id] });
   const r=document.querySelector('input[name="pago"][value="'+d.pago+'"]'); if(r){ r.checked=true; $("vueltobox").hidden=!$("p-ef").checked }
-  $("f-ofertas").checked=!!d.ofertas; $("savedmsg").hidden=false;
+  $("f-ofertas").checked=!!d.ofertas; $("savedmsg").hidden=false; checkZone();
 }
-function saveLast(){ try{ localStorage.setItem("eltio-ultimo",JSON.stringify({items:[...cart],fecha:new Date().toLocaleDateString("es-AR",{day:"numeric",month:"numeric"})})) }catch(e){} }
+function saveLast(){ try{ localStorage.setItem("eltio-ultimo",JSON.stringify({num:ORDNUM,items:[...cart],fecha:new Date().toLocaleDateString("es-AR",{day:"numeric",month:"numeric"})})) }catch(e){} }
 function lastOrder(){ try{ const l=JSON.parse(localStorage.getItem("eltio-ultimo")||"null"); return l&&l.items&&l.items.some(([e])=>byEan.has(e)) ? l : null }catch(e){ return null } }
 $("testbar").hidden=!PRUEBA;
 $("count").textContent = "Cargando productos…";
@@ -613,6 +698,11 @@ fetch("productos.json").then(r=>r.json()).then(DATA=>{
   R = DATA.r; P = DATA.p; LOCAL_IMG = new Set(DATA.f||[]); IDX = P.map(p => norm(p[1] + " " + (p[6]||"") + " " + p[0])); S = DATA.s||[]; TOK = IDX.map(s => s.split(/[^a-z0-9]+/).filter(Boolean)); byEan = new Map(P.map(p=>[p[0],p]));
   try{ const s = JSON.parse(localStorage.getItem("eltio-cart")||"[]"); s.forEach(([e,q])=>{ if(byEan.has(e)) cart.set(e,q) }) }catch(e){}
   chips(); render();
+  // Extras (marcas y más vendidos) y ofertas: si no cargan, la tienda funciona igual.
+  fetch("extras.json").then(r=>r.ok?r.json():null).then(x=>{ if(!x) return; BR=x.b||[]; MK=new Map(Object.entries(x.m||{})); RANK=new Map((x.top||[]).map((e,i)=>[e,i])); render() }).catch(()=>{});
+  fetch("ofertas.json").then(r=>r.ok?r.json():null).then(o=>{ if(!o) return;
+    Object.entries(o).forEach(([e,pr])=>{ const p=byEan.get(e); if(p && pr>0 && pr<p[3] && !stepOf(p)){ p[7]=p[3]; p[3]=pr; OFERTAS.push(e) } });
+    if(OFERTAS.length){ render(); if(!$("sheet").hidden) renderCart() } }).catch(()=>{});
 }).catch(err=>{ console.error(err); $("count").textContent = "No pudimos cargar los productos. Recargá la página." });
 </script>
 

@@ -77,6 +77,8 @@ ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .zrow .price{font-size:1.4rem}
 .zrow .add,.zrow .qty button{font-size:1rem}
 .zrow .add{padding:10px 22px}
+.pieza{display:flex;flex-direction:column;gap:2px;width:100%;margin-top:10px;padding:10px 14px;border-radius:10px;border:1.5px dashed var(--brand);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.pieza span{font-size:.8rem;opacity:.75}
 .item .name{font-weight:600;min-width:0;overflow-wrap:anywhere}
 .item .meta{font-size:.75rem;color:var(--muted);margin-top:2px}
 .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
@@ -243,6 +245,7 @@ fieldset input{width:auto}
       <div class="zimg" id="zimg"></div>
       <h2 class="zname" id="zname"></h2>
       <div class="zrow"><div class="price" id="zprice"></div><div id="zqty"></div></div>
+      <div id="zpieza" hidden></div>
     </div>
   </div>
 </div>
@@ -311,8 +314,13 @@ let BR = [], MK = new Map(), RANK = new Map(), OFERTAS = [];
 // Productos por peso: p[4] = gramos por cada toque del +. El precio de lista es por kg.
 const stepOf = p => p[4]||0;
 const fmtW = g => g>=1000 ? (g/1000).toLocaleString("es-AR")+" kg" : g+" g";
-const qLabel = (p,q) => stepOf(p) ? fmtW(q*stepOf(p)) : String(q);
-const lineTotal = (p,q) => stepOf(p) ? Math.round(q*stepOf(p)/1000*p[3]) : q*p[3];
+// Cortes que se venden por pieza entera: kg aproximados de cada pieza (promedio de una media res, 11/09/2026).
+const PIEZA={"717":4.18,"718":5.93,"748":0.565,"702":3.18,"765":4.135,"778":1.615,"712":3.545,"713":4.035,"705":1.395,"714":1.44,"721":2,"706":2.38,"707":0.725,"710":5.93,"722":2.89,"727":8.705,"720":2.675,"719":2.14,"704":1.305,"711":1.02};
+const ENTERA = new Set(); try{ JSON.parse(localStorage.getItem("eltio-entera")||"[]").forEach(e=>ENTERA.add(e)) }catch(e){}
+const entera = p => ENTERA.has(p[0]) && PIEZA[p[0]];
+const kgTxt = k => k.toLocaleString("es-AR",{maximumFractionDigits:1})+" kg";
+const qLabel = (p,q) => entera(p) ? (q>1?q+" piezas enteras":"Pieza entera")+" (~"+kgTxt(q*PIEZA[p[0]])+")" : stepOf(p) ? fmtW(q*stepOf(p)) : String(q);
+const lineTotal = (p,q) => entera(p) ? Math.round(q*PIEZA[p[0]]*p[3]) : stepOf(p) ? Math.round(q*stepOf(p)/1000*p[3]) : q*p[3];
 const priceLabel = p => fmt(p[3]) + (stepOf(p) ? " /kg" : "");
 const fmt = n => "$" + Math.round(n).toLocaleString("es-AR");
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
@@ -425,7 +433,11 @@ function openZoom(p){
   if(LOCAL_IMG.has(p[0])){ const im=new Image(); im.alt=show(p); im.onload=()=>{ z.textContent=""; z.classList.add("foto"); z.appendChild(im) }; im.src="fotos/"+p[0]+".jpg" } else z.classList.remove("foto");
   zqty(); $("zoom").hidden=false; document.body.style.overflow="hidden"; pushNav("zoom");
 }
-function zqty(){ const q=$("zqty"); q.innerHTML=""; q.appendChild(qtyCtl(zcur[0])) }
+function zqty(){ const q=$("zqty"); q.innerHTML=""; q.appendChild(qtyCtl(zcur[0]));
+  const z=$("zpieza"), k=PIEZA[zcur[0]]; z.innerHTML=""; z.hidden=!k||entera(zcur);
+  if(k&&!entera(zcur)){ const b=document.createElement("button"); b.className="pieza";
+    b.innerHTML="<b>Pedir la pieza entera</b><span></span>"; b.lastChild.textContent="Aprox. "+kgTxt(k)+" · unos "+fmt(Math.round(k*zcur[3]))+". Se cobra lo que pese.";
+    b.onclick=()=>{ const e=zcur[0]; cart.delete(e); ENTERA.add(e); setQ(e,1) }; z.appendChild(b) } }
 function hideZoom(){ $("zoom").hidden=true; zcur=null; if($("sheet").hidden) document.body.style.overflow="" }
 function closeZoom(){ closeNav("zoom") }
 const PORTADA=[
@@ -559,8 +571,8 @@ function showRecent(){
 }
 function setQ(e,q){
   if(q>(cart.get(e)||0) && query.trim()) saveRecent();
-  if(q<=0) cart.delete(e); else cart.set(e,q);
-  try{ localStorage.setItem("eltio-cart", JSON.stringify([...cart])) }catch(err){}
+  if(q<=0){ cart.delete(e); ENTERA.delete(e) } else cart.set(e,q);
+  try{ localStorage.setItem("eltio-cart", JSON.stringify([...cart])); localStorage.setItem("eltio-entera", JSON.stringify([...ENTERA])) }catch(err){}
   render(); if(!$("sheet").hidden) renderCart(); if(zcur) zqty();
 }
 function renderCart(){
@@ -658,7 +670,7 @@ $("clear").onclick=()=>{
   const b=$("clear");
   if(!b.classList.contains("sure")){ b.classList.add("sure"); b.textContent="¿Seguro? Tocá de nuevo para vaciar"; clearTimer=setTimeout(()=>{ b.classList.remove("sure"); b.textContent="Vaciar carrito" },4000); return }
   clearTimeout(clearTimer); b.classList.remove("sure"); b.textContent="Vaciar carrito";
-  cart.clear(); notes.clear(); saveNotes(); try{ localStorage.setItem("eltio-cart","[]") }catch(e){}
+  cart.clear(); ENTERA.clear(); notes.clear(); saveNotes(); try{ localStorage.setItem("eltio-cart","[]") }catch(e){}
   closeSheet(); render();
 };
 $("back").onclick=()=>closeNav("s3");

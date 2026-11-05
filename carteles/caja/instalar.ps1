@@ -1,4 +1,5 @@
-# Instala los carteles automaticos en esta PC: corre como tarea del sistema, para cualquier usuario (administrador o cajero).
+# Instala los carteles automaticos en esta PC: tarea programada al prender la PC, con el usuario administrador que instala.
+# Imprime aunque despues se loguee el cajero. Si el usuario no tiene clave de Windows, la tarea no se puede guardar: ponerle una.
 # Corre en PowerShell como administrador. Deja todo en C:\carteles.
 $ErrorActionPreference = 'Stop'
 function Ok($m)  { Write-Host "  OK  $m" -ForegroundColor Green }
@@ -38,7 +39,7 @@ try {
     $plain = (New-Object System.Net.NetworkCredential('', $c)).Password
     Set-Content $vf (@{ u = $u; c = $plain } | ConvertTo-Json -Compress) -Encoding UTF8
   }
-  icacls $vf /inheritance:r /grant:r '*S-1-5-18:F' '*S-1-5-32-544:F' /Q | Out-Null
+  icacls $vf /inheritance:r /grant:r '*S-1-5-18:F' '*S-1-5-32-544:F' "$env:USERDOMAIN\$env:USERNAME:F" /Q | Out-Null
   Ok 'Usuario de Vendita guardado'
 
   # 5) Primera lectura: guarda los precios de hoy (no imprime nada)
@@ -47,14 +48,16 @@ try {
   if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$dst\precios.json")) { Mal 'No pude leer Vendita (usuario o clave mal?). Borra C:\carteles\vendita.json y volve a correr el instalador.' }
   Ok 'Precios de hoy guardados'
 
-  # 6) Arranque automatico: tarea del sistema al prender la PC (no importa que usuario use la caja)
+  # 6) Arranque automatico: tarea al prender la PC, con ESTE usuario de Windows (como "sistema" Edge no arma el PDF)
+  Write-Host "`nEscribi la clave de Windows de $env:USERNAME (la de entrar a esta PC). Windows la guarda para la tarea." -ForegroundColor Yellow
+  $pw = Read-Host 'Clave de Windows' -AsSecureString
+  $cred = New-Object PSCredential("$env:USERDOMAIN\$env:USERNAME", $pw)
   $act = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\carteles\carteles.ps1'
   $trg = New-ScheduledTaskTrigger -AtStartup
-  $pri = New-ScheduledTaskPrincipal -UserId 'S-1-5-18' -LogonType ServiceAccount -RunLevel Highest
   $set = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
-  Register-ScheduledTask -TaskName 'Carteles El Tio' -Action $act -Trigger $trg -Principal $pri -Settings $set -Force | Out-Null
+  Register-ScheduledTask -TaskName 'Carteles El Tio' -Action $act -Trigger $trg -Settings $set -User $cred.UserName -Password $cred.GetNetworkCredential().Password -RunLevel Highest -Force | Out-Null
   Start-ScheduledTask -TaskName 'Carteles El Tio'
-  Ok 'Arranca solo al prender la PC (para todos los usuarios)'
+  Ok "Arranca solo al prender la PC (con el usuario $env:USERNAME)"
 
   Write-Host "`n  LISTO. Desde ahora cada cambio de precio en Vendita sale impreso en la Brother.`n" -ForegroundColor Green
 } catch { Mal $_.Exception.Message }

@@ -1,6 +1,6 @@
 # Carteles automaticos - Supermercado El Tio. Lo instala INSTALAR.bat en C:\carteles.
 # Cada 15 min (7 a 22 h) lee Vendita (SOLO LECTURA), arma el PDF de los productos que cambiaron de precio
-# Corre como SYSTEM (tarea 'Carteles El Tio', al prender la PC), sin depender de quien inicie sesion,
+# Corre como tarea 'Carteles El Tio' al prender la PC con el usuario administrador (NO como SYSTEM: Edge no arma el PDF),
 # y cada 30 s imprime en la Brother lo que haya en C:\carteles\pendientes (tambien PDFs puestos a mano).
 param([switch]$SoloBase)
 $ErrorActionPreference = 'Stop'

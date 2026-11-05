@@ -6,7 +6,7 @@ Se instala desde PowerShell (administrador) con el comando del hilo. El instalad
 3. Busca la Brother. La de tickets y la predeterminada no se tocan.
 4. Pide el usuario de Vendita y lo guarda cifrado para la PC.
 5. Guarda los precios de hoy, sin imprimir nada.
-6. Crea la tarea "Carteles El Tío", que corre como sistema al prender la PC, sin importar qué usuario use la caja.
+6. Pide la clave de Windows del administrador y crea la tarea "Carteles El Tío", que corre con ese usuario al prender la PC, sin importar quién use la caja después. Como "sistema" no funciona: Edge no arma el PDF.
 
 
 ## Cómo funciona
@@ -19,3 +19,10 @@ El registro queda en `C:\carteles\registro.txt`.
 ## Desinstalar
 1. Borrar la tarea "Carteles El Tío" en el Programador de tareas.
 2. Borrar `C:\carteles`.
+
+## Instalado el 05/11/2026 en la caja 4 (PC Usuario_11, Windows 11)
+- Brother DCP-1617NW por USB (Windows la llama "Brother DCP-1610NW series"). La de tickets (POS80) no se toca.
+- Lo que falló y cómo se resolvió:
+  - El antivirus marcaba `plantilla.html` como troyano cuando tenía CSS y JS adentro: por eso están separados en `carteles.css` y `carteles.js`.
+  - El instalador de SumatraPDF no imprime: hay que usar el zip portable, que el instalador baja solo.
+  - Como tarea del sistema, Edge no genera el PDF: la tarea corre con el usuario administrador.

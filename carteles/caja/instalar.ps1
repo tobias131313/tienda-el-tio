@@ -1,4 +1,4 @@
-# Instala los carteles automaticos para TODOS los usuarios de esta PC (administrador y cajero).
+# Instala los carteles automaticos en esta PC: corre como tarea del sistema, para cualquier usuario (administrador o cajero).
 # Corre en PowerShell como administrador. Deja todo en C:\carteles.
 $ErrorActionPreference = 'Stop'
 function Ok($m)  { Write-Host "  OK  $m" -ForegroundColor Green }
@@ -11,7 +11,6 @@ try {
   New-Item -ItemType Directory -Force $dst, "$dst\auto", "$dst\pendientes", "$dst\impresos", "$dst\revisar" | Out-Null
   Copy-Item "$src\carteles.ps1" $dst -Force
   Copy-Item "$src\auto\*" "$dst\auto" -Recurse -Force
-  icacls $dst /grant '*S-1-5-32-545:(OI)(CI)M' /T /Q | Out-Null
   Ok 'Archivos copiados en C:\carteles'
 
   # 2) SumatraPDF (imprime PDF sin abrir ventanas): se instala aparte desde su pagina oficial; aca se copia a C:\carteles
@@ -33,36 +32,32 @@ try {
   Set-Content "$dst\impresora.txt" $imp -Encoding UTF8
   Ok "Impresora: $imp"
 
-  # 4) Usuario de Vendita (solo lectura), cifrado para esta PC
-  if (-not (Test-Path "$dst\vendita.dat")) {
-    Write-Host "`nEscribi el usuario y la clave de Vendita (el de Claude). No se muestran ni se mandan a nadie." -ForegroundColor Yellow
+  # 4) Usuario de Vendita (solo lectura). Archivo que solo pueden abrir el sistema y los administradores (el cajero no)
+  $vf = "$dst\vendita.json"
+  if (-not (Test-Path $vf)) {
+    Write-Host "`nEscribi el usuario y la clave de Vendita (el de Claude). Quedan en esta PC, el cajero no los puede ver." -ForegroundColor Yellow
     $u = Read-Host 'Usuario'
     $c = Read-Host 'Clave' -AsSecureString
-    $plain = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($c))
-    Add-Type -AssemblyName System.Security
-    $bytes = [Text.Encoding]::UTF8.GetBytes((@{ u = $u; c = $plain } | ConvertTo-Json -Compress))
-    $enc = [Security.Cryptography.ProtectedData]::Protect($bytes, $null, 'LocalMachine')
-    [IO.File]::WriteAllBytes("$dst\vendita.dat", $enc)
+    $plain = (New-Object System.Net.NetworkCredential('', $c)).Password
+    Set-Content $vf (@{ u = $u; c = $plain } | ConvertTo-Json -Compress) -Encoding UTF8
   }
+  icacls $vf /inheritance:r /grant:r '*S-1-5-18:F' '*S-1-5-32-544:F' /Q | Out-Null
   Ok 'Usuario de Vendita guardado'
 
   # 5) Primera lectura: guarda los precios de hoy (no imprime nada)
   Write-Host '  ... leyendo precios de Vendita (1 o 2 minutos)'
   & powershell -NoProfile -ExecutionPolicy Bypass -File "$dst\carteles.ps1" -SoloBase
-  if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$dst\precios.json")) { Mal 'No pude leer Vendita (usuario o clave mal?). Borra C:\carteles\vendita.dat y volve a correr el instalador.' }
+  if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$dst\precios.json")) { Mal 'No pude leer Vendita (usuario o clave mal?). Borra C:\carteles\vendita.json y volve a correr el instalador.' }
   Ok 'Precios de hoy guardados'
 
-  # 6) Arranque automatico: al iniciar sesion cualquier usuario (cajero o administrador), oculto
-  $vbs = "$dst\arrancar.vbs"
-  Set-Content $vbs 'CreateObject("WScript.Shell").Run "powershell -NoProfile -ExecutionPolicy Bypass -File C:\carteles\carteles.ps1", 0, False' -Encoding ASCII
-  $act = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument "`"$vbs`""
-  $trg = New-ScheduledTaskTrigger -AtLogOn
-  $grp = (New-Object Security.Principal.SecurityIdentifier 'S-1-5-32-545').Translate([Security.Principal.NTAccount]).Value
-  $pri = New-ScheduledTaskPrincipal -GroupId $grp -RunLevel Limited
-  $set = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
+  # 6) Arranque automatico: tarea del sistema al prender la PC (no importa que usuario use la caja)
+  $act = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\carteles\carteles.ps1'
+  $trg = New-ScheduledTaskTrigger -AtStartup
+  $pri = New-ScheduledTaskPrincipal -UserId 'S-1-5-18' -LogonType ServiceAccount -RunLevel Highest
+  $set = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
   Register-ScheduledTask -TaskName 'Carteles El Tio' -Action $act -Trigger $trg -Principal $pri -Settings $set -Force | Out-Null
-  Start-Process wscript.exe "`"$vbs`""
-  Ok 'Arranca solo al iniciar sesion (cajero o administrador)'
+  Start-ScheduledTask -TaskName 'Carteles El Tio'
+  Ok 'Arranca solo al prender la PC (para todos los usuarios)'
 
   Write-Host "`n  LISTO. Desde ahora cada cambio de precio en Vendita sale impreso en la Brother.`n" -ForegroundColor Green
 } catch { Mal $_.Exception.Message }

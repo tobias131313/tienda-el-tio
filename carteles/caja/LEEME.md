@@ -6,9 +6,8 @@ Se instala desde PowerShell (administrador) con el comando del hilo. El instalad
 3. Busca la Brother. La de tickets y la predeterminada no se tocan.
 4. Pide el usuario de Vendita y lo guarda cifrado para la PC.
 5. Guarda los precios de hoy, sin imprimir nada.
-6. Crea la tarea "Carteles El Tío", que arranca al iniciar sesión con cualquier usuario (cajero o administrador).
+6. Crea la tarea "Carteles El Tío", que corre como sistema al prender la PC, sin importar qué usuario use la caja.
 
-Si hay dos sesiones abiertas, corre una sola copia.
 
 ## Cómo funciona
 `carteles.ps1` hace dos cosas:

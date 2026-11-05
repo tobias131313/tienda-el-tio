@@ -1,5 +1,6 @@
 # Carteles automaticos - Supermercado El Tio. Lo instala INSTALAR.bat en C:\carteles.
 # Cada 15 min (7 a 22 h) lee Vendita (SOLO LECTURA), arma el PDF de los productos que cambiaron de precio
+# Corre como SYSTEM (tarea 'Carteles El Tio', al prender la PC), sin depender de quien inicie sesion,
 # y cada 30 s imprime en la Brother lo que haya en C:\carteles\pendientes (tambien PDFs puestos a mano).
 param([switch]$SoloBase)
 $ErrorActionPreference = 'Stop'
@@ -24,8 +25,7 @@ function Generar([switch]$SoloBase) {
     }
   }
 
-  Add-Type -AssemblyName System.Security
-  $cr = [Text.Encoding]::UTF8.GetString([Security.Cryptography.ProtectedData]::Unprotect([IO.File]::ReadAllBytes("$dir\vendita.dat"), $null, 'LocalMachine')) | ConvertFrom-Json
+  $cr = Get-Content "$dir\vendita.json" -Raw | ConvertFrom-Json
   $tok = (Json "$B/api/cuentas/login" $null (@{ UserName = $cr.u; Password = $cr.c; RolId = '1' } | ConvertTo-Json)).token
   $h = @{ Authorization = "Bearer $tok" }
 
@@ -65,7 +65,7 @@ function Generar([switch]$SoloBase) {
   $nombre = "Carteles_{0:yyyy-MM-dd_HHmm}_{1}prod.pdf" -f (Get-Date), $cambios.Count
   $tmp = Join-Path $env:TEMP $nombre
   $url = 'file:///' + ((Join-Path $work 'plantilla.html') -replace '\\', '/')
-  $a = @('--headless=new', '--disable-gpu', '--no-first-run', '--no-pdf-header-footer', '--virtual-time-budget=8000',
+  $a = @('--headless=new', '--disable-gpu', '--no-sandbox', '--no-first-run', '--no-pdf-header-footer', '--virtual-time-budget=8000',
          "--user-data-dir=`"$env:TEMP\carteles-edge`"", "--print-to-pdf=`"$tmp`"", $url)
   $pr = Start-Process $edge -ArgumentList $a -PassThru -WindowStyle Hidden
   if (-not $pr.WaitForExit(120000)) { $pr.Kill(); throw 'Edge no termino el PDF' }
@@ -79,11 +79,6 @@ function Generar([switch]$SoloBase) {
 
 if ($SoloBase) { try { Generar -SoloBase; exit 0 } catch { Log "ERROR base: $($_.Exception.Message)"; exit 1 } }
 
-# Una sola copia corriendo aunque haya dos usuarios con sesion abierta: la otra espera su turno
-$lock = $null
-while (-not $lock) {
-  try { $lock = [IO.File]::Open("$dir\corriendo.lock", 'OpenOrCreate', 'ReadWrite', 'None') } catch { Start-Sleep -Seconds 60 }
-}
 $impresora = (Get-Content "$dir\impresora.txt" -Raw).Trim()
 Log "Arranca (impresora: $impresora)"
 $ultGen = [datetime]::MinValue

@@ -13,15 +13,12 @@ try {
   Copy-Item "$src\auto\*" "$dst\auto" -Recurse -Force
   Ok 'Archivos copiados en C:\carteles'
 
-  # 2) SumatraPDF (imprime PDF sin abrir ventanas): se instala aparte desde su pagina oficial; aca se copia a C:\carteles
+  # 2) SumatraPDF portable (imprime PDF sin abrir ventanas). OJO: el instalador NO sirve, tiene que ser la version portable del zip
   $sum = "$dst\SumatraPDF.exe"
-  if (-not (Test-Path $sum)) {
-    $cand = @("$env:LOCALAPPDATA\SumatraPDF\SumatraPDF.exe", "$env:ProgramFiles\SumatraPDF\SumatraPDF.exe", "${env:ProgramFiles(x86)}\SumatraPDF\SumatraPDF.exe") +
-            @()
-    $f = $cand | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
-    if (-not $f) { Mal 'Falta SumatraPDF. Bajalo de https://www.sumatrapdfreader.org, abrilo, apreta Instalar SumatraPDF y volve a correr esto.' }
-    Copy-Item $f $sum -Force
-  }
+  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+  Invoke-WebRequest 'https://www.sumatrapdfreader.org/dl/rel/3.6.1/SumatraPDF-3.6.1-64.zip' -OutFile "$env:TEMP\sumatra.zip" -UseBasicParsing
+  Expand-Archive "$env:TEMP\sumatra.zip" "$env:TEMP\sumatra" -Force
+  Copy-Item (Get-ChildItem "$env:TEMP\sumatra" -Filter *.exe | Select-Object -First 1).FullName $sum -Force
   Ok 'SumatraPDF listo'
 
   # 3) Impresora Brother (la de tickets y la predeterminada no se tocan)

@@ -68,8 +68,14 @@ function Generar([switch]$SoloBase) {
   $a = @('--headless=new', '--disable-gpu', '--no-sandbox', '--no-first-run', '--no-pdf-header-footer', '--virtual-time-budget=8000',
          "--user-data-dir=`"$env:TEMP\carteles-edge`"", "--print-to-pdf=`"$tmp`"", $url)
   $pr = Start-Process $edge -ArgumentList $a -PassThru -WindowStyle Hidden
-  if (-not $pr.WaitForExit(120000)) { $pr.Kill(); throw 'Edge no termino el PDF' }
-  if (-not (Test-Path $tmp) -or (Get-Item $tmp).Length -lt 2000) { throw 'El PDF salio vacio' }
+  $null = $pr.WaitForExit(120000)
+  # Edge a veces termina el proceso principal antes de escribir el PDF: esperar hasta 90 s a que aparezca y deje de crecer
+  $prev = -1
+  for ($i = 0; $i -lt 45; $i++) {
+    Start-Sleep -Seconds 2
+    if (Test-Path $tmp) { $len = (Get-Item $tmp).Length; if ($len -gt 2000 -and $len -eq $prev) { break }; $prev = $len }
+  }
+  if (-not (Test-Path $tmp) -or (Get-Item $tmp).Length -lt 2000) { throw "El PDF salio vacio (Edge: $edge)" }
 
   if ($cambios.Count -gt 300) { Move-Item $tmp (Join-Path $revisar $nombre) -Force; Log "$($cambios.Count) cambios: PDF en revisar (no se imprime solo)" }
   else { Move-Item $tmp (Join-Path $pend $nombre) -Force; Log "$($cambios.Count) carteles a imprimir: $nombre" }

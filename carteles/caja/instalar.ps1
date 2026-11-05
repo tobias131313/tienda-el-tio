@@ -17,9 +17,9 @@ try {
   $sum = "$dst\SumatraPDF.exe"
   if (-not (Test-Path $sum)) {
     $cand = @("$env:LOCALAPPDATA\SumatraPDF\SumatraPDF.exe", "$env:ProgramFiles\SumatraPDF\SumatraPDF.exe", "${env:ProgramFiles(x86)}\SumatraPDF\SumatraPDF.exe") +
-            @(Get-ChildItem "$env:USERPROFILE\Downloads" -Filter 'SumatraPDF*.exe' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike '*install*' } | ForEach-Object FullName)
+            @()
     $f = $cand | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
-    if (-not $f) { Mal 'Falta SumatraPDF. Instalalo desde https://www.sumatrapdfreader.org y volve a correr esto.' }
+    if (-not $f) { Mal 'Falta SumatraPDF. Bajalo de https://www.sumatrapdfreader.org, abrilo, apreta Instalar SumatraPDF y volve a correr esto.' }
     Copy-Item $f $sum -Force
   }
   Ok 'SumatraPDF listo'

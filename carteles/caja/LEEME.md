@@ -1,6 +1,6 @@
 # Carteles automáticos en la caja 4
 
-Hacé doble clic en INSTALAR.bat desde la cuenta de administrador. El instalador:
+Se instala desde PowerShell (administrador) con el comando del hilo. El instalador:
 1. Copia todo a `C:\carteles`, con permiso para todos los usuarios.
 2. Baja SumatraPDF.
 3. Busca la Brother. La de tickets y la predeterminada no se tocan.

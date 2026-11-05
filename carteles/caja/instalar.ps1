@@ -1,5 +1,5 @@
 # Instala los carteles automaticos para TODOS los usuarios de esta PC (administrador y cajero).
-# Corre como administrador (INSTALAR.bat lo pide). Deja todo en C:\carteles.
+# Corre en PowerShell como administrador. Deja todo en C:\carteles.
 $ErrorActionPreference = 'Stop'
 function Ok($m)  { Write-Host "  OK  $m" -ForegroundColor Green }
 function Mal($m) { Write-Host "  ERROR  $m" -ForegroundColor Red; Read-Host 'Mandale una foto de esto a Claude y apreta Enter'; exit 1 }
@@ -14,14 +14,14 @@ try {
   icacls $dst /grant '*S-1-5-32-545:(OI)(CI)M' /T /Q | Out-Null
   Ok 'Archivos copiados en C:\carteles'
 
-  # 2) SumatraPDF (imprime PDF sin abrir ventanas)
+  # 2) SumatraPDF (imprime PDF sin abrir ventanas): se instala aparte desde su pagina oficial; aca se copia a C:\carteles
   $sum = "$dst\SumatraPDF.exe"
   if (-not (Test-Path $sum)) {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $zip = "$env:TEMP\sumatra.zip"
-    Invoke-WebRequest 'https://www.sumatrapdfreader.org/dl/rel/3.5.2/SumatraPDF-3.5.2-64.zip' -OutFile $zip -UseBasicParsing
-    Expand-Archive $zip "$env:TEMP\sumatra" -Force
-    Copy-Item (Get-ChildItem "$env:TEMP\sumatra" -Filter *.exe | Select-Object -First 1).FullName $sum -Force
+    $cand = @("$env:LOCALAPPDATA\SumatraPDF\SumatraPDF.exe", "$env:ProgramFiles\SumatraPDF\SumatraPDF.exe", "${env:ProgramFiles(x86)}\SumatraPDF\SumatraPDF.exe") +
+            @(Get-ChildItem "$env:USERPROFILE\Downloads" -Filter 'SumatraPDF*.exe' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike '*install*' } | ForEach-Object FullName)
+    $f = $cand | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    if (-not $f) { Mal 'Falta SumatraPDF. Instalalo desde https://www.sumatrapdfreader.org y volve a correr esto.' }
+    Copy-Item $f $sum -Force
   }
   Ok 'SumatraPDF listo'
 

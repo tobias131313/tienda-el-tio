@@ -31,7 +31,9 @@ El registro queda en `C:\carteles\registro.txt`.
 Cada 2 minutos el programa mira la carpeta `buzon/` de la rama `carteles-buzon` de este repo y baja a
 `C:\carteles\pendientes` los PDF nuevos (se imprimen solos). Detalle en `buzon/LEEME.md`.
 
-Actualizar la caja 4 (PowerShell como administrador):
+Instalado el 07/11/2026. Para actualizar el script en la caja 4 (PowerShell como administrador; conviene usar el hash del commit en la URL porque raw.githubusercontent cachea la rama):
 ```
 Stop-ScheduledTask 'Carteles El Tio'; Invoke-WebRequest 'https://raw.githubusercontent.com/tobias131313/tienda-el-tio/carteles-buzon/carteles/caja/carteles.ps1' -OutFile C:\carteles\carteles.ps1 -UseBasicParsing; Start-ScheduledTask 'Carteles El Tio'
 ```
+
+Ojo: la caja corre PowerShell 5.1. No usar `$Matches` dentro de pipelines ni confiar en que `ConvertFrom-Json` devuelva una lista: ahí dio "No se puede indizar en una matriz nula".

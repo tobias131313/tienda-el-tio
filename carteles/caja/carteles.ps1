@@ -22,7 +22,9 @@ $script:buzonEan = @{}
 function Log($m) { Add-Content $log ("{0:yyyy-MM-dd HH:mm} [{1}] {2}" -f (Get-Date), $env:USERNAME, $m); Write-Host $m }
 function Buzon {
   $r = Invoke-WebRequest $buzonApi -UseBasicParsing -TimeoutSec 60 -Headers @{ 'User-Agent' = 'carteles-el-tio'; 'Cache-Control' = 'no-cache' }
-  $items = @([Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json | Where-Object { $_.type -eq 'file' -and $_.name -like '*.pdf' })
+  # PowerShell 5.1: ConvertFrom-Json devuelve la lista entera como UN objeto; los parentesis la separan en archivos
+  $lista = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json
+  $items = @($lista | ForEach-Object { $_ } | Where-Object { $_.type -eq 'file' -and $_.name -like '*.pdf' })
   $hechos = @{}; if (Test-Path $buzonReg) { Get-Content $buzonReg | ForEach-Object { $hechos[$_.Trim()] = 1 } }
   $hoy = Get-Date -Format 'yyyy-MM-dd'
   foreach ($it in $items) {

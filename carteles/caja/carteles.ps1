@@ -21,22 +21,26 @@ $buzonReg = "$dir\buzon.txt"
 $script:buzonEan = @{}
 function Log($m) { Add-Content $log ("{0:yyyy-MM-dd HH:mm} [{1}] {2}" -f (Get-Date), $env:USERNAME, $m); Write-Host $m }
 function Buzon {
+  if ($null -eq $script:buzonEan) { $script:buzonEan = @{} }
   $r = Invoke-WebRequest $buzonApi -UseBasicParsing -TimeoutSec 60 -Headers @{ 'User-Agent' = 'carteles-el-tio'; 'Cache-Control' = 'no-cache' }
-  # PowerShell 5.1: ConvertFrom-Json devuelve la lista entera como UN objeto; los parentesis la separan en archivos
-  $lista = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json
-  $items = @($lista | ForEach-Object { $_ } | Where-Object { $_.type -eq 'file' -and $_.name -like '*.pdf' })
-  $hechos = @{}; if (Test-Path $buzonReg) { Get-Content $buzonReg | ForEach-Object { $hechos[$_.Trim()] = 1 } }
+  $txt = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray())
+  $lista = ConvertFrom-Json $txt
+  $hechos = @{}
+  if (Test-Path $buzonReg) { foreach ($l in @(Get-Content $buzonReg)) { if ($l) { $hechos[$l.Trim()] = 1 } } }
   $hoy = Get-Date -Format 'yyyy-MM-dd'
-  foreach ($it in $items) {
+  foreach ($it in @($lista)) {
+    $nom = [string]$it.name
+    if ($it.type -ne 'file' -or -not $nom.EndsWith('.pdf')) { continue }
     # EAN con oferta de hoy: no se les hace cartel blanco
-    if ($it.name -like "$hoy*" -and $it.name -match '__([0-9_]+)\.pdf$') { $Matches[1].Split('_') | Where-Object { $_ } | ForEach-Object { $script:buzonEan[$_] = $hoy } }
-    if ($hechos.ContainsKey($it.name)) { continue }
-    $tmp = Join-Path $env:TEMP $it.name
-    Invoke-WebRequest $it.download_url -OutFile $tmp -UseBasicParsing -TimeoutSec 120 -Headers @{ 'User-Agent' = 'carteles-el-tio' }
-    if ((Get-Item $tmp).Length -lt 2000) { throw "PDF del buzon vacio: $($it.name)" }
-    Move-Item $tmp (Join-Path $pend ("Buzon_" + $it.name)) -Force
-    Add-Content $buzonReg $it.name
-    Log "Buzon: bajado $($it.name)"
+    $m = [regex]::Match($nom, '__([0-9_]+)\.pdf$')
+    if ($nom.StartsWith($hoy) -and $m.Success) { foreach ($e in $m.Groups[1].Value.Split('_')) { if ($e) { $script:buzonEan[$e] = $hoy } } }
+    if ($hechos.ContainsKey($nom)) { continue }
+    $tmp = Join-Path $env:TEMP $nom
+    Invoke-WebRequest ([string]$it.download_url) -OutFile $tmp -UseBasicParsing -TimeoutSec 120 -Headers @{ 'User-Agent' = 'carteles-el-tio' }
+    if ((Get-Item $tmp).Length -lt 2000) { throw "PDF del buzon vacio: $nom" }
+    Move-Item $tmp (Join-Path $pend ("Buzon_" + $nom)) -Force
+    Add-Content $buzonReg $nom
+    Log "Buzon: bajado $nom"
   }
 }
 
@@ -122,7 +126,7 @@ $ultBuzon = [datetime]::MinValue
 while ($true) {
   $ahora = Get-Date
   if (($ahora - $ultBuzon).TotalMinutes -ge 2) {
-    try { Buzon } catch { Log "ERROR buzon: $($_.Exception.Message)" }
+    try { Buzon } catch { Log "ERROR buzon: $($_.Exception.Message) (linea $($_.InvocationInfo.ScriptLineNumber))" }
     $ultBuzon = $ahora
   }
   if (($ahora - $ultGen).TotalMinutes -ge 15 -and $ahora.Hour -ge 7 -and $ahora.Hour -lt 22) {

@@ -26,3 +26,12 @@ El registro queda en `C:\carteles\registro.txt`.
   - El antivirus marcaba `plantilla.html` como troyano cuando tenía CSS y JS adentro: por eso están separados en `carteles.css` y `carteles.js`.
   - El instalador de SumatraPDF no imprime: hay que usar el zip portable, que el instalador baja solo.
   - Como tarea del sistema, Edge no genera el PDF: la tarea corre con el usuario administrador.
+
+## Buzón (07/11/2026)
+Cada 2 minutos el programa mira la carpeta `buzon/` de la rama `carteles-buzon` de este repo y baja a
+`C:\carteles\pendientes` los PDF nuevos (se imprimen solos). Detalle en `buzon/LEEME.md`.
+
+Actualizar la caja 4 (PowerShell como administrador):
+```
+Stop-ScheduledTask 'Carteles El Tio'; Invoke-WebRequest 'https://raw.githubusercontent.com/tobias131313/tienda-el-tio/carteles-buzon/carteles/caja/carteles.ps1' -OutFile C:\carteles\carteles.ps1 -UseBasicParsing; Start-ScheduledTask 'Carteles El Tio'
+```

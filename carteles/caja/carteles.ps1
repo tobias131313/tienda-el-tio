@@ -2,8 +2,11 @@
 # Cada 15 min (7 a 22 h) lee Vendita (SOLO LECTURA), arma el PDF de los productos que cambiaron de precio
 # Corre como tarea 'Carteles El Tio' al prender la PC con el usuario administrador (NO como SYSTEM: Edge no arma el PDF),
 # y cada 30 s imprime en la Brother lo que haya en C:\carteles\pendientes (tambien PDFs puestos a mano).
+# Buzon: cada 2 min mira la carpeta buzon/ de la rama carteles-buzon en GitHub (ahi Claude deja carteles de oferta)
+# y baja a pendientes los PDF nuevos. Si el nombre termina en __EAN1_EAN2.pdf, esos productos no llevan cartel blanco ese dia.
 param([switch]$SoloBase)
 $ErrorActionPreference = 'Stop'
+try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch {}
 $dir     = 'C:\carteles'
 $B       = 'https://gestion.venditaenlinea.com'
 $estado  = "$dir\precios.json"
@@ -13,7 +16,28 @@ $imp     = "$dir\impresos"
 $revisar = "$dir\revisar"
 $log     = "$dir\registro.txt"
 $sumatra = "$dir\SumatraPDF.exe"
+$buzonApi = 'https://api.github.com/repos/tobias131313/tienda-el-tio/contents/buzon?ref=carteles-buzon'
+$buzonReg = "$dir\buzon.txt"
+$script:buzonEan = @{}
 function Log($m) { Add-Content $log ("{0:yyyy-MM-dd HH:mm} [{1}] {2}" -f (Get-Date), $env:USERNAME, $m); Write-Host $m }
+function Buzon {
+  $r = Invoke-WebRequest $buzonApi -UseBasicParsing -TimeoutSec 60 -Headers @{ 'User-Agent' = 'carteles-el-tio'; 'Cache-Control' = 'no-cache' }
+  $items = @([Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json | Where-Object { $_.type -eq 'file' -and $_.name -like '*.pdf' })
+  $hechos = @{}; if (Test-Path $buzonReg) { Get-Content $buzonReg | ForEach-Object { $hechos[$_.Trim()] = 1 } }
+  $hoy = Get-Date -Format 'yyyy-MM-dd'
+  foreach ($it in $items) {
+    # EAN con oferta de hoy: no se les hace cartel blanco
+    if ($it.name -like "$hoy*" -and $it.name -match '__([0-9_]+)\.pdf$') { $Matches[1].Split('_') | Where-Object { $_ } | ForEach-Object { $script:buzonEan[$_] = $hoy } }
+    if ($hechos.ContainsKey($it.name)) { continue }
+    $tmp = Join-Path $env:TEMP $it.name
+    Invoke-WebRequest $it.download_url -OutFile $tmp -UseBasicParsing -TimeoutSec 120 -Headers @{ 'User-Agent' = 'carteles-el-tio' }
+    if ((Get-Item $tmp).Length -lt 2000) { throw "PDF del buzon vacio: $($it.name)" }
+    Move-Item $tmp (Join-Path $pend ("Buzon_" + $it.name)) -Force
+    Add-Content $buzonReg $it.name
+    Log "Buzon: bajado $($it.name)"
+  }
+}
+
 function Generar([switch]$SoloBase) {
   function Json($url, $hdr, $body) {
     $p = @{ Uri = $url; UseBasicParsing = $true; TimeoutSec = 180 }
@@ -54,6 +78,10 @@ function Generar([switch]$SoloBase) {
   $cambios = @($prods.Keys | Where-Object {
       $p = $prods[$_]; (-not $p.disc) -and $p.precio -gt 10 -and ((-not $viejo.ContainsKey($_)) -or $viejo[$_] -ne $p.precio)
     } | ForEach-Object { $prods[$_] } | Sort-Object rubro, nombre)
+  $hoy = Get-Date -Format 'yyyy-MM-dd'
+  $salteo = @($cambios | Where-Object { $_.ean -and $script:buzonEan[$_.ean] -eq $hoy })
+  if ($salteo.Count) { Log ("Sin cartel blanco (tienen oferta en el buzon): " + (($salteo | ForEach-Object { $_.nombre }) -join ', ')) }
+  $cambios = @($cambios | Where-Object { -not ($_.ean -and $script:buzonEan[$_.ean] -eq $hoy) })
   if ($cambios.Count -eq 0) { Guardar; return }
 
   # Arma el PDF con Edge (sin ventana) a partir de la plantilla
@@ -88,8 +116,13 @@ if ($SoloBase) { try { Generar -SoloBase; exit 0 } catch { Log "ERROR base: $($_
 $impresora = (Get-Content "$dir\impresora.txt" -Raw).Trim()
 Log "Arranca (impresora: $impresora)"
 $ultGen = [datetime]::MinValue
+$ultBuzon = [datetime]::MinValue
 while ($true) {
   $ahora = Get-Date
+  if (($ahora - $ultBuzon).TotalMinutes -ge 2) {
+    try { Buzon } catch { Log "ERROR buzon: $($_.Exception.Message)" }
+    $ultBuzon = $ahora
+  }
   if (($ahora - $ultGen).TotalMinutes -ge 15 -and $ahora.Hour -ge 7 -and $ahora.Hour -lt 22) {
     try { Generar } catch { Log "ERROR al generar: $($_.Exception.Message)" }
     $ultGen = $ahora

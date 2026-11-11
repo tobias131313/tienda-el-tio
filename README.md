@@ -8,7 +8,7 @@ Tienda de pedidos online del Súper El Tío (Moreno). El cliente arma el carrito
 
 Reglas del pedido (en `index.html`): mínimo $25.000, envío $2.000, envío gratis desde $50.000.
 
-Para actualizar precios se regenera `productos.json` desde la última lista de precios del súper.
+Para actualizar precios se regenera `productos.json` desde la última lista de precios del súper. Todas las noches, la PC del súper pasa los precios de Vendita con `herramientas/precios_desde_vendita.py`: solo cambia precios de productos que ya están en la tienda, nunca escribe costos ni stock, y deja para revisar los precios sospechosos (de $10 o menos, o que bajan a menos de la mitad o suben a más del triple).
 
 ## Fotos
 
